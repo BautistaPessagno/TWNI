@@ -70,6 +70,7 @@ private struct TodaySummaryCard: View {
         VStack(spacing: 16) {
             Text("Today")
                 .font(.headline)
+                .foregroundStyle(Color.monoPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 20) {
@@ -77,33 +78,33 @@ private struct TodaySummaryCard: View {
                     title: "Screen Time",
                     value: summary.totalScreenTimeFormatted,
                     icon: "desktopcomputer",
-                    color: .teal
+                    valueWeight: .heavy
                 )
 
                 SummaryMetric(
                     title: "Sessions",
                     value: "\(summary.sessionsCount)",
                     icon: "clock",
-                    color: .blue
+                    valueWeight: .bold
                 )
 
                 SummaryMetric(
                     title: "Breaks",
                     value: "\(summary.breaksTaken)/\(summary.breaksTaken + summary.breaksSkipped)",
                     icon: "eye",
-                    color: .green
+                    valueWeight: .medium
                 )
 
                 SummaryMetric(
                     title: "Score",
                     value: "\(Int(summary.completionRate * 100))%",
                     icon: "star.fill",
-                    color: .orange
+                    valueWeight: .semibold
                 )
             }
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .monochromeCard()
     }
 }
 
@@ -111,18 +112,20 @@ private struct SummaryMetric: View {
     let title: String
     let value: String
     let icon: String
-    let color: Color
+    var valueWeight: Font.Weight = .bold
 
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundStyle(color)
+                .foregroundStyle(Color.monoSecondary)
             Text(value)
                 .font(.headline)
+                .fontWeight(valueWeight)
+                .foregroundStyle(Color.monoPrimary)
             Text(title)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.monoTertiary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -137,6 +140,7 @@ private struct WeeklyScreenTimeChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Screen Time")
                 .font(.headline)
+                .foregroundStyle(Color.monoPrimary)
 
             Chart(dailySummaries) { summary in
                 BarMark(
@@ -145,7 +149,7 @@ private struct WeeklyScreenTimeChart: View {
                 )
                 .foregroundStyle(
                     .linearGradient(
-                        colors: [.teal, .blue],
+                        colors: [Color.monoPrimary, Color.monoSecondary],
                         startPoint: .bottom,
                         endPoint: .top
                     )
@@ -156,7 +160,7 @@ private struct WeeklyScreenTimeChart: View {
             .frame(height: 200)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .monochromeCard()
     }
 }
 
@@ -169,29 +173,30 @@ private struct BreaksChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Breaks")
                 .font(.headline)
+                .foregroundStyle(Color.monoPrimary)
 
             Chart(dailySummaries) { summary in
                 BarMark(
                     x: .value("Day", summary.date.shortDayName),
                     y: .value("Count", summary.breaksTaken)
                 )
-                .foregroundStyle(.green)
+                .foregroundStyle(Color.monoPrimary)
                 .position(by: .value("Type", "Taken"))
 
                 BarMark(
                     x: .value("Day", summary.date.shortDayName),
                     y: .value("Count", summary.breaksSkipped)
                 )
-                .foregroundStyle(.red.opacity(0.6))
+                .foregroundStyle(Color.monoSecondary.opacity(0.6))
                 .position(by: .value("Type", "Skipped"))
             }
             .chartForegroundStyleScale([
-                "Taken": .green,
-                "Skipped": Color.red.opacity(0.6)
+                "Taken": Color.monoPrimary,
+                "Skipped": Color.monoSecondary.opacity(0.6)
             ])
             .frame(height: 200)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .monochromeCard()
     }
 }

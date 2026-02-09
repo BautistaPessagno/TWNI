@@ -9,9 +9,10 @@ struct MenuBarView: View {
             // Header
             HStack {
                 Image(systemName: "eye")
-                    .foregroundStyle(.teal)
+                    .foregroundStyle(Color.monoPrimary)
                 Text("TWNI")
-                    .font(.headline)
+                    .font(.headline.bold())
+                    .foregroundStyle(Color.monoPrimary)
                 Spacer()
                 StateIndicator(state: timerManager.state)
             }
@@ -24,27 +25,20 @@ struct MenuBarView: View {
             Divider()
 
             // Enable/Disable toggle
-            Button {
+            Group {
                 if timerManager.state == .disabled {
-                    timerManager.enable()
+                    menuBarToggleButton.buttonStyle(MonochromePrimaryButtonStyle())
                 } else {
-                    timerManager.disable()
+                    menuBarToggleButton.buttonStyle(MonochromeSecondaryButtonStyle())
                 }
-            } label: {
-                Label(
-                    timerManager.state == .disabled ? "Enable Protection" : "Disable Protection",
-                    systemImage: timerManager.state == .disabled ? "shield.checkered" : "shield.slash"
-                )
-                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(timerManager.state == .disabled ? .teal : .red.opacity(0.8))
 
             if timerManager.state == .breakActive {
                 Button("Skip Break") {
                     timerManager.skipBreak()
                 }
                 .buttonStyle(.bordered)
+                .tint(Color.monoAccent)
                 .frame(maxWidth: .infinity)
             }
 
@@ -57,7 +51,7 @@ struct MenuBarView: View {
                 Label("\(timerManager.totalSessionsToday) sessions", systemImage: "clock")
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.monoSecondary)
 
             Divider()
 
@@ -66,11 +60,27 @@ struct MenuBarView: View {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.monoTertiary)
             .font(.caption)
         }
         .padding()
         .frame(width: 260)
+    }
+
+    private var menuBarToggleButton: some View {
+        Button {
+            if timerManager.state == .disabled {
+                timerManager.enable()
+            } else {
+                timerManager.disable()
+            }
+        } label: {
+            Label(
+                timerManager.state == .disabled ? "Enable Protection" : "Disable Protection",
+                systemImage: timerManager.state == .disabled ? "shield.checkered" : "shield.slash"
+            )
+            .frame(maxWidth: .infinity)
+        }
     }
 }
 
@@ -79,14 +89,31 @@ struct MenuBarView: View {
 private struct StateIndicator: View {
     let state: TimerState
 
+    @State private var pulse = false
+
     var body: some View {
         HStack(spacing: 4) {
             Circle()
-                .fill(color)
+                .fill(state == .disabled ? Color.clear : Color.monoPrimary)
+                .overlay(
+                    Circle()
+                        .stroke(Color.monoTertiary, lineWidth: state == .disabled ? 1.5 : 0)
+                )
+                .opacity(state == .disabled ? 0.4 : 1.0)
                 .frame(width: 8, height: 8)
+                .scaleEffect(pulse ? 1.3 : 1.0)
+                .animation(
+                    state == .breakActive
+                        ? .easeInOut(duration: 1).repeatForever(autoreverses: true)
+                        : .default,
+                    value: pulse
+                )
+                .onAppear { pulse = state == .breakActive }
+                .onChange(of: state) { pulse = state == .breakActive }
+
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.monoSecondary)
         }
     }
 
@@ -95,14 +122,6 @@ private struct StateIndicator: View {
         case .active: "Active"
         case .breakActive: "Break"
         case .disabled: "Disabled"
-        }
-    }
-
-    private var color: Color {
-        switch state {
-        case .active: .green
-        case .breakActive: .teal
-        case .disabled: .gray
         }
     }
 }
@@ -117,27 +136,29 @@ private struct MenuBarStatusDisplay: View {
             if timerManager.state == .breakActive {
                 Text("Look away...")
                     .font(.subheadline)
-                    .foregroundStyle(.teal)
+                    .foregroundStyle(Color.monoPrimary)
                 Text("\(timerManager.breakSecondsRemaining)s")
                     .font(.system(size: 36, weight: .light, design: .monospaced))
+                    .foregroundStyle(Color.monoPrimary)
 
                 ProgressView(value: timerManager.breakProgress)
-                    .tint(.teal)
+                    .tint(Color.monoProgressFill)
             } else if timerManager.state == .active {
                 let minutes = timerManager.secondsUntilBreak / 60
                 let seconds = timerManager.secondsUntilBreak % 60
                 Text("Next break in")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.monoSecondary)
                 Text(String(format: "%02d:%02d", minutes, seconds))
                     .font(.system(size: 36, weight: .light, design: .monospaced))
+                    .foregroundStyle(Color.monoPrimary)
 
                 ProgressView(value: timerManager.progress)
-                    .tint(.blue)
+                    .tint(Color.monoProgressFill)
             } else {
                 Text("Protection disabled")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.monoTertiary)
             }
         }
     }

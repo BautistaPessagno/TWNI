@@ -18,6 +18,7 @@ struct ContentView: View {
                     SettingsView(timerManager: timerManager)
                 }
             }
+            .tint(Color.monoAccent)
 
             // Break overlay
             if timerManager.state == .breakActive {

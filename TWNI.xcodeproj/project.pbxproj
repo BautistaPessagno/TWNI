@@ -26,6 +26,9 @@
 		AA000017 /* TimeFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000017 /* TimeFormatting.swift */; };
 		AA000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000018 /* Assets.xcassets */; };
 		AA000019 /* AppBlockingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000020 /* AppBlockingService.swift */; };
+		AA000020 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021 /* Color+Extensions.swift */; };
+		AA000021 /* MotionLinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022 /* MotionLinesView.swift */; };
+		AA000022 /* MonochromeCardModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023 /* MonochromeCardModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +52,9 @@
 		AB000018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB000019 /* TWNI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNI.entitlements; sourceTree = "<group>"; };
 		AB000020 /* AppBlockingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBlockingService.swift; sourceTree = "<group>"; };
+		AB000021 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
+		AB000022 /* MotionLinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionLinesView.swift; sourceTree = "<group>"; };
+		AB000023 /* MonochromeCardModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonochromeCardModifier.swift; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -79,6 +85,7 @@
 				AE000003 /* Models */,
 				AE000004 /* Services */,
 				AE000005 /* Views */,
+				AE000011 /* Components */,
 				AE000006 /* Platform */,
 				AE000009 /* Extensions */,
 				AB000018 /* Assets.xcassets */,
@@ -150,8 +157,18 @@
 			isa = PBXGroup;
 			children = (
 				AB000017 /* TimeFormatting.swift */,
+				AB000021 /* Color+Extensions.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		AE000011 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AB000022 /* MotionLinesView.swift */,
+				AB000023 /* MonochromeCardModifier.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		AE000010 /* Products */ = {
@@ -249,6 +266,9 @@
 				AA000015 /* MenuBarView.swift in Sources */,
 				AA000016 /* MacScreenTimeReader.swift in Sources */,
 				AA000017 /* TimeFormatting.swift in Sources */,
+				AA000020 /* Color+Extensions.swift in Sources */,
+				AA000021 /* MotionLinesView.swift in Sources */,
+				AA000022 /* MonochromeCardModifier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
