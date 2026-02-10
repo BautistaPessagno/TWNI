@@ -30,27 +30,28 @@ private struct StatusCard: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundStyle(iconColor)
+                .font(.system(size: 48, weight: iconWeight))
+                .foregroundStyle(Color.monoPrimary.opacity(iconOpacity))
                 .symbolEffect(.pulse, isActive: timerManager.state == .breakActive)
 
             Text(title)
                 .font(.title2.bold())
+                .foregroundStyle(Color.monoPrimary)
 
             Text(subtitle)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.monoSecondary)
                 .multilineTextAlignment(.center)
 
             if timerManager.state == .active {
                 ProgressView(value: timerManager.progress)
-                    .tint(.teal)
+                    .tint(Color.monoProgressFill)
                     .padding(.horizontal, 32)
             }
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .monochromeCard(cornerRadius: 20)
         .animation(.easeInOut(duration: 0.3), value: timerManager.state)
     }
 
@@ -62,11 +63,19 @@ private struct StatusCard: View {
         }
     }
 
-    private var iconColor: Color {
+    private var iconWeight: Font.Weight {
         switch timerManager.state {
-        case .active: .teal
-        case .breakActive: .green
-        case .disabled: .secondary
+        case .active: .regular
+        case .breakActive: .bold
+        case .disabled: .light
+        }
+    }
+
+    private var iconOpacity: Double {
+        switch timerManager.state {
+        case .active: 1.0
+        case .breakActive: 1.0
+        case .disabled: 0.4
         }
     }
 
@@ -103,25 +112,36 @@ private struct StatusCard: View {
 private struct ProtectionToggle: View {
     var timerManager: TimerManager
 
+    private var isDisabled: Bool { timerManager.state == .disabled }
+
     var body: some View {
+        Group {
+            if isDisabled {
+                toggleButton.buttonStyle(MonochromePrimaryButtonStyle())
+            } else {
+                toggleButton.buttonStyle(MonochromeSecondaryButtonStyle())
+            }
+        }
+        .padding(.horizontal, 32)
+    }
+
+    private var toggleButton: some View {
         Button {
-            if timerManager.state == .disabled {
+            if isDisabled {
                 timerManager.enable()
             } else {
                 timerManager.disable()
             }
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: timerManager.state == .disabled ? "shield.slash" : "shield.checkered")
-                Text(timerManager.state == .disabled ? "Enable Protection" : "Disable Protection")
+                Image(systemName: isDisabled ? "shield.checkered" : "shield.slash")
+                    .fontWeight(isDisabled ? .bold : .light)
+                Text(isDisabled ? "Enable Protection" : "Disable Protection")
                     .font(.headline)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(timerManager.state == .disabled ? .teal : .red.opacity(0.8))
-        .padding(.horizontal, 32)
     }
 }
 
@@ -137,10 +157,11 @@ private struct ModeIndicator: View {
             Text(mode == .auto ? "Auto (20-20-20)" : "Manual")
                 .font(.caption)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.monoTertiary)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(.ultraThinMaterial, in: Capsule())
+        .background(Color.monoElevated, in: Capsule())
+        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 0.5))
     }
 }
 
@@ -154,21 +175,24 @@ private struct TodayStats: View {
             StatBadge(
                 value: "\(timerManager.totalSessionsToday)",
                 label: "Sessions",
-                icon: "clock"
+                icon: "clock",
+                iconWeight: .bold
             )
             StatBadge(
                 value: "\(timerManager.breaksTakenToday)",
                 label: "Breaks",
-                icon: "eye"
+                icon: "eye",
+                iconWeight: .medium
             )
             StatBadge(
                 value: "\(timerManager.breaksSkippedToday)",
                 label: "Skipped",
-                icon: "forward.fill"
+                icon: "forward.fill",
+                iconWeight: .light
             )
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .monochromeCard()
     }
 }
 
@@ -176,17 +200,20 @@ private struct StatBadge: View {
     let value: String
     let label: String
     let icon: String
+    var iconWeight: Font.Weight = .regular
 
     var body: some View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundStyle(.teal)
+                .fontWeight(iconWeight)
+                .foregroundStyle(Color.monoSecondary)
             Text(value)
                 .font(.title2.bold())
+                .foregroundStyle(Color.monoPrimary)
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.monoTertiary)
         }
     }
 }

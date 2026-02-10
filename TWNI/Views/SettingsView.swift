@@ -29,7 +29,7 @@ struct SettingsView: View {
                 if timerManager.timerMode == .auto {
                     Text("Every 20 minutes, look at something 20 feet away for 20 seconds.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.monoTertiary)
                 } else {
                     Stepper(
                         "Interval: \(intervalMinutes) min",
@@ -84,7 +84,7 @@ struct SettingsView: View {
                         .font(.subheadline.bold())
                     Text("Every 20 minutes, look at something 20 feet away for 20 seconds. This helps reduce eye strain from prolonged screen use.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.monoTertiary)
                 }
                 .padding(.vertical, 4)
             }
@@ -143,7 +143,7 @@ private struct AppBlockingSection: View {
 
                     Text("Requires Screen Time authorization to block apps during breaks.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.monoTertiary)
                 }
             }
         }

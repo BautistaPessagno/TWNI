@@ -7,45 +7,44 @@ struct BreakOverlayView: View {
 
     var body: some View {
         ZStack {
-            // Calming gradient background
             LinearGradient(
                 colors: [
-                    Color.teal.opacity(0.8),
-                    Color.blue.opacity(0.6),
-                    Color.indigo.opacity(0.4)
+                    Color.monoSurface,
+                    Color.monoProgressTrack,
+                    Color.monoBorder.opacity(0.6)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
+            MotionLinesView(animate: true, lineCount: 12, opacity: 0.08)
+                .ignoresSafeArea()
+
             VStack(spacing: 40) {
                 Spacer()
 
-                // Eye icon with glow
                 Image(systemName: "eye")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.white)
-                    .shadow(color: .white.opacity(animateGlow ? 0.8 : 0.2), radius: animateGlow ? 30 : 10)
+                    .font(.system(size: 60, weight: .light))
+                    .foregroundStyle(Color.monoPrimary)
+                    .shadow(color: Color.monoPrimary.opacity(animateGlow ? 0.3 : 0.1), radius: animateGlow ? 20 : 8)
                     .onAppear {
                         withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
                             animateGlow = true
                         }
                     }
 
-                // Instruction
                 VStack(spacing: 12) {
                     Text("Look 20 feet away")
-                        .font(.system(size: 32, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 32, weight: .heavy))
+                        .foregroundStyle(Color.monoPrimary)
 
                     Text("Rest your eyes by focusing on something distant")
-                        .font(.body)
-                        .foregroundStyle(.white.opacity(0.8))
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.monoSecondary)
                         .multilineTextAlignment(.center)
                 }
 
-                // Countdown ring
                 BreakCountdownRing(
                     remaining: timerManager.breakSecondsRemaining,
                     total: timerManager.breakDurationSeconds,
@@ -54,17 +53,18 @@ struct BreakOverlayView: View {
 
                 Spacer()
 
-                // Skip button
                 Button {
                     timerManager.skipBreak()
                 } label: {
                     Text("Skip break")
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(Color.monoSecondary)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
-                        .background(.white.opacity(0.15), in: Capsule())
+                        .background(Color.monoCard, in: Capsule())
+                        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
                 }
+                .buttonStyle(.plain)
                 .padding(.bottom, 40)
             }
             .padding()
@@ -82,13 +82,13 @@ private struct BreakCountdownRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.2), lineWidth: 8)
+                .stroke(Color.monoProgressTrack, lineWidth: 8)
                 .frame(width: 160, height: 160)
 
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    Color.white,
+                    Color.monoPrimary,
                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
                 )
                 .frame(width: 160, height: 160)
@@ -97,7 +97,7 @@ private struct BreakCountdownRing: View {
 
             Text("\(remaining)")
                 .font(.system(size: 56, weight: .ultraLight, design: .monospaced))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.monoPrimary)
                 .contentTransition(.numericText())
                 .animation(.default, value: remaining)
         }

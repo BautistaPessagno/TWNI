@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import SwiftData
 import Combine
+import AudioToolbox
 
 enum TimerState: String {
     case active
@@ -123,6 +124,7 @@ final class TimerManager {
         stopTimer()
         endCurrentSession()
         notificationService.cancelPendingNotifications()
+        notificationService.cancelBreakEndNotification()
 
         #if os(iOS)
         appBlockingService?.unblockApps()
@@ -134,6 +136,7 @@ final class TimerManager {
         breakSecondsRemaining = effectiveBreakDurationSeconds
         startBreakTimer()
         notificationService.scheduleBreakNotification()
+        notificationService.scheduleBreakEndNotification(afterSeconds: effectiveBreakDurationSeconds)
 
         #if os(iOS)
         appBlockingService?.blockApps()
@@ -146,6 +149,7 @@ final class TimerManager {
             appBlockingService?.unblockApps()
             #endif
         }
+        notificationService.cancelBreakEndNotification()
         recordBreak(completed: false)
         breaksSkippedToday += 1
         resetAfterBreak()
@@ -218,9 +222,19 @@ final class TimerManager {
         #if os(iOS)
         appBlockingService?.unblockApps()
         #endif
+        notificationService.cancelBreakEndNotification()
+        if soundEnabled { playBreakEndSound() }
         recordBreak(completed: true)
         breaksTakenToday += 1
         resetAfterBreak()
+    }
+
+    private func playBreakEndSound() {
+        #if os(macOS)
+        NSSound(named: "Glass")?.play()
+        #else
+        AudioServicesPlaySystemSound(1007)
+        #endif
     }
 
     private func resetAfterBreak() {
