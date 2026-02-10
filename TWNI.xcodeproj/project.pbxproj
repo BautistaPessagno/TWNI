@@ -162,6 +162,14 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		AE000010 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AC000001 /* TWNI.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		AE000011 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -169,14 +177,6 @@
 				AB000023 /* MonochromeCardModifier.swift */,
 			);
 			path = Components;
-			sourceTree = "<group>";
-		};
-		AE000010 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AC000001 /* TWNI.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -404,7 +404,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;
@@ -447,7 +447,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;

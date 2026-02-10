@@ -6,7 +6,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             TabView {
-                Tab("Dashboard", systemImage: "shield.checkered") {
+                Tab("Dashboard", systemImage: "eye") {
                     DashboardView(timerManager: timerManager)
                 }
 
