@@ -51,6 +51,31 @@ final class NotificationService: @unchecked Sendable {
         center.add(request)
     }
 
+    func scheduleBreakEndNotification(afterSeconds seconds: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = "Break complete!"
+        content.body = "Your eyes are rested. Back to it!"
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: TimeInterval(max(seconds, 1)),
+            repeats: false
+        )
+
+        let request = UNNotificationRequest(
+            identifier: "break-end",
+            content: content,
+            trigger: trigger
+        )
+
+        center.add(request)
+    }
+
+    func cancelBreakEndNotification() {
+        center.removePendingNotificationRequests(withIdentifiers: ["break-end"])
+    }
+
     func cancelPendingNotifications() {
         center.removePendingNotificationRequests(
             withIdentifiers: ["break-reminder", "timer-background"]
