@@ -9,8 +9,32 @@
     {
       "filename" : "AppIcon.png",
       "idiom" : "mac",
-      "scale" : "2x",
+      "platform" : "macos",
       "size" : "512x512"
+    },
+    {
+      "filename" : "AppIcon.png",
+      "idiom" : "mac",
+      "platform" : "macos",
+      "size" : "256x256"
+    },
+    {
+      "filename" : "AppIcon.png",
+      "idiom" : "mac",
+      "platform" : "macos",
+      "size" : "128x128"
+    },
+    {
+      "filename" : "AppIcon.png",
+      "idiom" : "mac",
+      "platform" : "macos",
+      "size" : "32x32"
+    },
+    {
+      "filename" : "AppIcon.png",
+      "idiom" : "mac",
+      "platform" : "macos",
+      "size" : "16x16"
     }
   ],
   "info" : {

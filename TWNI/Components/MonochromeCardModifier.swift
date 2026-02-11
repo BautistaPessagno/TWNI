@@ -25,7 +25,7 @@ extension View {
 struct MonochromePrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.monoSurface)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(
