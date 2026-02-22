@@ -11,7 +11,7 @@ struct MenuBarView: View {
                 Image(systemName: "eye")
                     .foregroundStyle(Color.monoPrimary)
                 Text("TWNI")
-                    .font(.headline.bold())
+                    .font(.headline.weight(.heavy))
                     .foregroundStyle(Color.monoPrimary)
                 Spacer()
                 StateIndicator(state: timerManager.state)
@@ -50,7 +50,7 @@ struct MenuBarView: View {
                 Spacer()
                 Label("\(timerManager.totalSessionsToday) sessions", systemImage: "clock")
             }
-            .font(.caption)
+            .font(.caption.weight(.medium))
             .foregroundStyle(Color.monoSecondary)
 
             Divider()
@@ -112,7 +112,7 @@ private struct StateIndicator: View {
                 .onChange(of: state) { pulse = state == .breakActive }
 
             Text(label)
-                .font(.caption)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.monoSecondary)
         }
     }
@@ -135,7 +135,7 @@ private struct MenuBarStatusDisplay: View {
         VStack(spacing: 8) {
             if timerManager.state == .breakActive {
                 Text("Look away...")
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.monoPrimary)
                 Text("\(timerManager.breakSecondsRemaining)s")
                     .font(.system(size: 36, weight: .light, design: .monospaced))
@@ -147,7 +147,7 @@ private struct MenuBarStatusDisplay: View {
                 let minutes = timerManager.secondsUntilBreak / 60
                 let seconds = timerManager.secondsUntilBreak % 60
                 Text("Next break in")
-                    .font(.caption)
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.monoSecondary)
                 Text(String(format: "%02d:%02d", minutes, seconds))
                     .font(.system(size: 36, weight: .light, design: .monospaced))

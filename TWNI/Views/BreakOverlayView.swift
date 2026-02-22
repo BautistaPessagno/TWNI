@@ -40,7 +40,7 @@ struct BreakOverlayView: View {
                         .foregroundStyle(Color.monoPrimary)
 
                     Text("Rest your eyes by focusing on something distant")
-                        .font(.body.weight(.medium))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(Color.monoSecondary)
                         .multilineTextAlignment(.center)
                 }
@@ -57,7 +57,7 @@ struct BreakOverlayView: View {
                     timerManager.skipBreak()
                 } label: {
                     Text("Skip break")
-                        .font(.subheadline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.monoSecondary)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)

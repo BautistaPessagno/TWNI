@@ -19,6 +19,7 @@ struct DashboardView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.monoSurface)
     }
 }
 
@@ -35,11 +36,11 @@ private struct StatusCard: View {
                 .symbolEffect(.pulse, isActive: timerManager.state == .breakActive)
 
             Text(title)
-                .font(.title2.bold())
+                .font(.title2.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
 
             Text(subtitle)
-                .font(.body)
+                .font(.body.weight(.semibold))
                 .foregroundStyle(Color.monoSecondary)
                 .multilineTextAlignment(.center)
 
@@ -137,7 +138,7 @@ private struct ProtectionToggle: View {
                 Image(systemName: isDisabled ? "shield.checkered" : "shield.slash")
                     .fontWeight(isDisabled ? .bold : .light)
                 Text(isDisabled ? "Enable Protection" : "Disable Protection")
-                    .font(.headline)
+                    .font(.headline.weight(.heavy))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
@@ -153,9 +154,9 @@ private struct ModeIndicator: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: mode == .auto ? "wand.and.stars" : "slider.horizontal.3")
-                .font(.caption)
+                .font(.caption.weight(.semibold))
             Text(mode == .auto ? "Auto (20-20-20)" : "Manual")
-                .font(.caption)
+                .font(.caption.weight(.semibold))
         }
         .foregroundStyle(Color.monoTertiary)
         .padding(.horizontal, 12)
@@ -209,10 +210,10 @@ private struct StatBadge: View {
                 .fontWeight(iconWeight)
                 .foregroundStyle(Color.monoSecondary)
             Text(value)
-                .font(.title2.bold())
+                .font(.title2.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
             Text(label)
-                .font(.caption)
+                .font(.caption.weight(.medium))
                 .foregroundStyle(Color.monoTertiary)
         }
     }

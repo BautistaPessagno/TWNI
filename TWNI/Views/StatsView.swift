@@ -16,6 +16,8 @@ struct StatsView: View {
                 }
                 .padding()
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.monoSurface)
             .navigationTitle("Statistics")
         }
     }
@@ -69,7 +71,7 @@ private struct TodaySummaryCard: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Today")
-                .font(.headline)
+                .font(.headline.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -124,7 +126,7 @@ private struct SummaryMetric: View {
                 .fontWeight(valueWeight)
                 .foregroundStyle(Color.monoPrimary)
             Text(title)
-                .font(.caption2)
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(Color.monoTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -139,7 +141,7 @@ private struct WeeklyScreenTimeChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Screen Time")
-                .font(.headline)
+                .font(.headline.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
 
             Chart(dailySummaries) { summary in
@@ -172,7 +174,7 @@ private struct BreaksChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Breaks")
-                .font(.headline)
+                .font(.headline.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
 
             Chart(dailySummaries) { summary in

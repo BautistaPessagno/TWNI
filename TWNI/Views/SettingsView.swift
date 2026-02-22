@@ -28,7 +28,7 @@ struct SettingsView: View {
 
                 if timerManager.timerMode == .auto {
                     Text("Every 20 minutes, look at something 20 feet away for 20 seconds.")
-                        .font(.caption)
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(Color.monoTertiary)
                 } else {
                     Stepper(
@@ -81,15 +81,17 @@ struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("The 20-20-20 Rule")
-                        .font(.subheadline.bold())
+                        .font(.subheadline.weight(.heavy))
                     Text("Every 20 minutes, look at something 20 feet away for 20 seconds. This helps reduce eye strain from prolonged screen use.")
-                        .font(.caption)
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(Color.monoTertiary)
                 }
                 .padding(.vertical, 4)
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(Color.monoSurface)
         #if os(macOS)
         .frame(minWidth: 400, minHeight: 300)
         #endif
