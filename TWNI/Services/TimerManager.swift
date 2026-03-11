@@ -92,6 +92,7 @@ final class TimerManager {
 
     #if os(iOS)
     var appBlockingService: AppBlockingService?
+    var screenTimeService: iOSScreenTimeService?
     #endif
 
     deinit {
@@ -129,6 +130,7 @@ final class TimerManager {
 
         #if os(iOS)
         appBlockingService?.unblockApps()
+        screenTimeService?.clearBreakState()
         #endif
     }
 
@@ -142,6 +144,11 @@ final class TimerManager {
 
         #if os(iOS)
         appBlockingService?.blockApps()
+        SharedDefaults.shared.isBreakActive = true
+        SharedDefaults.shared.breakEndDate = Date().addingTimeInterval(
+            TimeInterval(effectiveBreakDurationSeconds)
+        )
+        SharedDefaults.shared.blockReason = .eyeBreak
         #endif
     }
 
@@ -149,6 +156,7 @@ final class TimerManager {
         if state == .breakActive {
             #if os(iOS)
             appBlockingService?.unblockApps()
+            screenTimeService?.clearBreakState()
             #endif
         }
         notificationService.cancelBreakEndNotification()
@@ -168,7 +176,6 @@ final class TimerManager {
         guard state == .active else { return }
         if idlePaused {
             idlePaused = false
-            // Reset the tracking start to now minus elapsed, effectively pausing the count
             trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
         }
     }
@@ -223,6 +230,7 @@ final class TimerManager {
     private func completeBreak() {
         #if os(iOS)
         appBlockingService?.unblockApps()
+        screenTimeService?.clearBreakState()
         #endif
         notificationService.cancelBreakEndNotification()
         if soundEnabled { playBreakEndSound() }
@@ -325,7 +333,7 @@ final class TimerManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.handleBackground()
+                self?.handleiOSBackground()
             }
         }
 
@@ -335,7 +343,7 @@ final class TimerManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.handleForeground()
+                self?.handleiOSForeground()
             }
         }
 
@@ -347,7 +355,7 @@ final class TimerManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.handleBackground()
+                self?.handleMacOSBackground()
             }
         }
 
@@ -357,7 +365,7 @@ final class TimerManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.handleForeground()
+                self?.handleMacOSForeground()
             }
         }
 
@@ -365,16 +373,19 @@ final class TimerManager {
         #endif
     }
 
-    private func handleBackground() {
-        #if os(iOS)
+    // MARK: - iOS Lifecycle (pause-based: only count active phone usage)
+
+    #if os(iOS)
+    private func handleiOSBackground() {
         stopTimer()
-        #endif
 
         if state == .active {
             let remainingSeconds = intervalSeconds - elapsedSeconds
             if remainingSeconds > 0 {
                 notificationService.scheduleTimerNotification(afterSeconds: remainingSeconds)
-                notificationService.scheduleBreakEndNotification(afterSeconds: remainingSeconds + effectiveBreakDurationSeconds)
+                notificationService.scheduleBreakEndNotification(
+                    afterSeconds: remainingSeconds + effectiveBreakDurationSeconds
+                )
             }
         } else if state == .breakActive {
             notificationService.cancelBreakEndNotification()
@@ -384,27 +395,91 @@ final class TimerManager {
         }
     }
 
-    private func handleForeground() {
+    private func handleiOSForeground() {
+        stopTimer()
+        notificationService.cancelPendingNotifications()
+        notificationService.cancelBreakEndNotification()
+
+        let shared = SharedDefaults.shared
+        if shared.isBreakActive, let endDate = shared.breakEndDate {
+            let remaining = Int(endDate.timeIntervalSinceNow)
+            if remaining > 0 {
+                state = .breakActive
+                breakSecondsRemaining = remaining
+                breakStartDate = endDate.addingTimeInterval(
+                    TimeInterval(-effectiveBreakDurationSeconds)
+                )
+                startBreakTimer()
+                appBlockingService?.blockApps()
+                return
+            } else {
+                screenTimeService?.clearBreakState()
+                appBlockingService?.unblockApps()
+                recordBreak(completed: true)
+                breaksTakenToday += 1
+            }
+        }
+
+        if state == .breakActive, let breakStart = breakStartDate {
+            let breakElapsed = Int(Date().timeIntervalSince(breakStart))
+            if breakElapsed < effectiveBreakDurationSeconds {
+                breakSecondsRemaining = effectiveBreakDurationSeconds - breakElapsed
+                startBreakTimer()
+                appBlockingService?.blockApps()
+                return
+            } else {
+                appBlockingService?.unblockApps()
+                screenTimeService?.clearBreakState()
+                recordBreak(completed: true)
+                breaksTakenToday += 1
+                resetAfterBreak()
+                return
+            }
+        }
+
+        if state == .active {
+            trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
+            startTimer()
+        }
+    }
+    #endif
+
+    // MARK: - macOS Lifecycle (wall-clock with idle detection, unchanged)
+
+    #if os(macOS)
+    private func handleMacOSBackground() {
+        if state == .active {
+            let remainingSeconds = intervalSeconds - elapsedSeconds
+            if remainingSeconds > 0 {
+                notificationService.scheduleTimerNotification(afterSeconds: remainingSeconds)
+                notificationService.scheduleBreakEndNotification(
+                    afterSeconds: remainingSeconds + effectiveBreakDurationSeconds
+                )
+            }
+        } else if state == .breakActive {
+            notificationService.cancelBreakEndNotification()
+            if breakSecondsRemaining > 0 {
+                notificationService.scheduleBreakEndNotification(afterSeconds: breakSecondsRemaining)
+            }
+        }
+    }
+
+    private func handleMacOSForeground() {
         stopTimer()
         notificationService.cancelPendingNotifications()
         notificationService.cancelBreakEndNotification()
 
         let now = Date()
 
-        // Loop to reconcile multiple interval+break cycles that elapsed in background.
-        // Each iteration either: (a) finds the current state and returns, or
-        // (b) completes a cycle and continues to check the next one.
         while true {
             if state == .active, let start = trackingStartDate {
                 let totalElapsed = Int(now.timeIntervalSince(start))
 
                 if totalElapsed < intervalSeconds {
-                    // Interval still running — just update elapsed
                     elapsedSeconds = totalElapsed
                     startTimer()
                     return
                 } else {
-                    // Interval expired — transition to break, continue loop to check break
                     state = .breakActive
                     breakStartDate = start.addingTimeInterval(TimeInterval(intervalSeconds))
                     breakSecondsRemaining = effectiveBreakDurationSeconds
@@ -413,23 +488,16 @@ final class TimerManager {
                 let breakElapsed = Int(now.timeIntervalSince(breakStart))
 
                 if breakElapsed < effectiveBreakDurationSeconds {
-                    // Break still ongoing — show overlay with correct remaining time
                     breakSecondsRemaining = effectiveBreakDurationSeconds - breakElapsed
                     startBreakTimer()
-
-                    #if os(iOS)
-                    appBlockingService?.blockApps()
-                    #endif
                     return
                 } else {
-                    // Break completed — record it, start new cycle, continue loop
-                    #if os(iOS)
-                    appBlockingService?.unblockApps()
-                    #endif
                     recordBreak(completed: true)
                     breaksTakenToday += 1
 
-                    let breakEndTime = breakStart.addingTimeInterval(TimeInterval(effectiveBreakDurationSeconds))
+                    let breakEndTime = breakStart.addingTimeInterval(
+                        TimeInterval(effectiveBreakDurationSeconds)
+                    )
                     breakStartDate = nil
                     endCurrentSession()
                     elapsedSeconds = 0
@@ -437,14 +505,13 @@ final class TimerManager {
                     trackingStartDate = breakEndTime
                     startNewSession()
                     state = .active
-                    // Don't return — loop again to check if this new interval also expired
                 }
             } else {
-                // disabled or missing dates — nothing to reconcile
                 return
             }
         }
     }
+    #endif
 }
 
 // MARK: - Helpers

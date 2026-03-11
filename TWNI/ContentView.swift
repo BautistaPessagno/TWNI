@@ -15,12 +15,13 @@ struct ContentView: View {
                 }
 
                 Tab("Settings", systemImage: "gear") {
-                    SettingsView(timerManager: timerManager)
+                    NavigationStack {
+                        SettingsView(timerManager: timerManager)
+                    }
                 }
             }
             .tint(Color.monoAccent)
 
-            // Break overlay
             if timerManager.state == .breakActive {
                 BreakOverlayView(timerManager: timerManager)
                     .transition(.opacity)

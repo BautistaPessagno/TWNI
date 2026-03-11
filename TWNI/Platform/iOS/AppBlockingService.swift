@@ -11,8 +11,8 @@ import ManagedSettings
 final class AppBlockingService {
     var isAuthorized = false
     var isBlockingEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "appBlockingEnabled") }
-        set { UserDefaults.standard.set(newValue, forKey: "appBlockingEnabled") }
+        get { SharedDefaults.shared.store.bool(forKey: "appBlockingEnabled") }
+        set { SharedDefaults.shared.store.set(newValue, forKey: "appBlockingEnabled") }
     }
 
     #if canImport(FamilyControls)
@@ -20,7 +20,8 @@ final class AppBlockingService {
         didSet { saveSelection() }
     }
 
-    private let store = ManagedSettingsStore()
+    private let scheduleStore = ManagedSettingsStore()
+    private let breakStore = ManagedSettingsStore(named: .init("twni.break"))
     #endif
 
     var isAvailable: Bool {
@@ -49,20 +50,70 @@ final class AppBlockingService {
         #endif
     }
 
-    func blockApps() {
+    func refreshAuthorization() {
         #if canImport(FamilyControls)
-        guard isAuthorized, isBlockingEnabled else { return }
-        store.shield.applications = activitySelection.applicationTokens.isEmpty ? nil : activitySelection.applicationTokens
-        store.shield.applicationCategories = activitySelection.categoryTokens.isEmpty
-            ? nil
-            : .specific(activitySelection.categoryTokens)
+        let status = AuthorizationCenter.shared.authorizationStatus
+        isAuthorized = (status == .approved)
         #endif
     }
 
-    func unblockApps() {
+    // MARK: - Break Blocking
+
+    func blockAppsForBreak() {
         #if canImport(FamilyControls)
-        store.clearAllSettings()
+        guard isAuthorized, isBlockingEnabled else { return }
+        breakStore.shield.applications = activitySelection.applicationTokens.isEmpty
+            ? nil : activitySelection.applicationTokens
+        breakStore.shield.applicationCategories = activitySelection.categoryTokens.isEmpty
+            ? nil : .specific(activitySelection.categoryTokens)
+        SharedDefaults.shared.blockReason = .eyeBreak
         #endif
+    }
+
+    func unblockAppsAfterBreak() {
+        #if canImport(FamilyControls)
+        breakStore.clearAllSettings()
+        if SharedDefaults.shared.blockReason == .eyeBreak {
+            SharedDefaults.shared.blockReason = nil
+        }
+        #endif
+    }
+
+    // MARK: - Schedule Blocking
+
+    func blockAppsForSchedule(selectionData: Data?) {
+        #if canImport(FamilyControls)
+        guard isAuthorized else { return }
+        guard let data = selectionData,
+              let selection = try? JSONDecoder().decode(
+                  FamilyActivitySelection.self, from: data
+              ) else { return }
+
+        scheduleStore.shield.applications = selection.applicationTokens.isEmpty
+            ? nil : selection.applicationTokens
+        scheduleStore.shield.applicationCategories = selection.categoryTokens.isEmpty
+            ? nil : .specific(selection.categoryTokens)
+        SharedDefaults.shared.blockReason = .scheduledBlock
+        #endif
+    }
+
+    func unblockAppsForSchedule() {
+        #if canImport(FamilyControls)
+        scheduleStore.clearAllSettings()
+        if SharedDefaults.shared.blockReason == .scheduledBlock {
+            SharedDefaults.shared.blockReason = nil
+        }
+        #endif
+    }
+
+    // MARK: - Legacy single-selection blocking (for break overlay)
+
+    func blockApps() {
+        blockAppsForBreak()
+    }
+
+    func unblockApps() {
+        unblockAppsAfterBreak()
     }
 
     // MARK: - Persistence
@@ -70,12 +121,14 @@ final class AppBlockingService {
     #if canImport(FamilyControls)
     private func saveSelection() {
         guard let data = try? JSONEncoder().encode(activitySelection) else { return }
-        UserDefaults.standard.set(data, forKey: "blockedAppsSelection")
+        SharedDefaults.shared.store.set(data, forKey: "blockedAppsSelection")
     }
 
     private func loadSelection() {
-        guard let data = UserDefaults.standard.data(forKey: "blockedAppsSelection"),
-              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else { return }
+        guard let data = SharedDefaults.shared.store.data(forKey: "blockedAppsSelection"),
+              let selection = try? JSONDecoder().decode(
+                  FamilyActivitySelection.self, from: data
+              ) else { return }
         activitySelection = selection
     }
     #endif

@@ -11,6 +11,7 @@ struct TWNIApp: App {
 
     #if os(iOS)
     @State private var appBlockingService = AppBlockingService()
+    @State private var screenTimeService = iOSScreenTimeService()
     #endif
 
     var sharedModelContainer: ModelContainer = {
@@ -33,6 +34,11 @@ struct TWNIApp: App {
                 .task {
                     #if os(iOS)
                     timerManager.appBlockingService = appBlockingService
+                    timerManager.screenTimeService = screenTimeService
+
+                    appBlockingService.refreshAuthorization()
+                    await screenTimeService.refreshAuthorization()
+                    screenTimeService.syncAllSchedules()
                     #endif
 
                     timerManager.configure(modelContext: sharedModelContainer.mainContext)
