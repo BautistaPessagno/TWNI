@@ -36,6 +36,60 @@ final class iOSScreenTimeService {
         #endif
     }
 
+    // MARK: - Always-On Eye Break Monitor
+
+    func registerAlwaysOnMonitor() {
+        #if canImport(DeviceActivity)
+        guard isAuthorized else { return }
+
+        let activityName = DeviceActivityName(TWNIConstants.alwaysOnActivityName)
+
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalEnd: DateComponents(hour: 23, minute: 59),
+            repeats: true
+        )
+
+        let thresholdMinutes = shared.intervalMinutes
+        let usageThreshold = DateComponents(minute: thresholdMinutes)
+
+        let eventName = DeviceActivityEvent.Name(TWNIConstants.alwaysOnActivityName + ".break")
+        let event: DeviceActivityEvent
+        if let selectionData = shared.breakSelectionData,
+           let selection = try? JSONDecoder().decode(
+               FamilyActivitySelection.self, from: selectionData
+           ) {
+            event = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                threshold: usageThreshold
+            )
+        } else {
+            event = DeviceActivityEvent(threshold: usageThreshold)
+        }
+
+        center.stopMonitoring([activityName])
+
+        do {
+            try center.startMonitoring(
+                activityName,
+                during: schedule,
+                events: [eventName: event]
+            )
+        } catch {
+            print("Failed to register always-on monitor: \(error)")
+        }
+        #endif
+    }
+
+    func restartAlwaysOnMonitor() {
+        #if canImport(DeviceActivity)
+        let activityName = DeviceActivityName(TWNIConstants.alwaysOnActivityName)
+        center.stopMonitoring([activityName])
+        registerAlwaysOnMonitor()
+        #endif
+    }
+
     // MARK: - Schedule Monitoring
 
     func startMonitoring(schedule: BlockSchedule) {
@@ -56,7 +110,7 @@ final class iOSScreenTimeService {
             repeats: true
         )
 
-        let usageThreshold = DateComponents(minute: 20)
+        let usageThreshold = DateComponents(minute: shared.intervalMinutes)
 
         let eventName = DeviceActivityEvent.Name(schedule.id.uuidString + ".break")
         let event: DeviceActivityEvent
@@ -92,15 +146,17 @@ final class iOSScreenTimeService {
         #endif
     }
 
-    func stopAllMonitoring() {
+    func stopAllScheduleMonitoring() {
         #if canImport(DeviceActivity)
-        center.stopMonitoring()
+        for schedule in shared.schedules {
+            stopMonitoring(schedule: schedule)
+        }
         #endif
     }
 
     func syncAllSchedules() {
         #if canImport(DeviceActivity)
-        stopAllMonitoring()
+        stopAllScheduleMonitoring()
         for schedule in shared.schedules where schedule.isEnabled {
             startMonitoring(schedule: schedule)
         }

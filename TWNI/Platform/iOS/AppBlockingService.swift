@@ -122,6 +122,7 @@ final class AppBlockingService {
     private func saveSelection() {
         guard let data = try? JSONEncoder().encode(activitySelection) else { return }
         SharedDefaults.shared.store.set(data, forKey: "blockedAppsSelection")
+        SharedDefaults.shared.breakSelectionData = data
     }
 
     private func loadSelection() {

@@ -14,6 +14,14 @@ struct ContentView: View {
                     StatsView()
                 }
 
+                #if os(iOS)
+                Tab("Schedules", systemImage: "calendar.badge.clock") {
+                    NavigationStack {
+                        SchedulesView(timerManager: timerManager)
+                    }
+                }
+                #endif
+
                 Tab("Settings", systemImage: "gear") {
                     NavigationStack {
                         SettingsView(timerManager: timerManager)

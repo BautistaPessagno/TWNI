@@ -256,6 +256,10 @@ final class TimerManager {
         startNewSession()
         state = .active
         startTimer()
+
+        #if os(iOS)
+        screenTimeService?.restartAlwaysOnMonitor()
+        #endif
     }
 
     private func stopTimer() {
@@ -373,7 +377,7 @@ final class TimerManager {
         #endif
     }
 
-    // MARK: - iOS Lifecycle (pause-based: only count active phone usage)
+    // MARK: - iOS Lifecycle (wall-clock: background time counts toward interval)
 
     #if os(iOS)
     private func handleiOSBackground() {
@@ -400,46 +404,53 @@ final class TimerManager {
         notificationService.cancelPendingNotifications()
         notificationService.cancelBreakEndNotification()
 
-        let shared = SharedDefaults.shared
-        if shared.isBreakActive, let endDate = shared.breakEndDate {
-            let remaining = Int(endDate.timeIntervalSinceNow)
-            if remaining > 0 {
-                state = .breakActive
-                breakSecondsRemaining = remaining
-                breakStartDate = endDate.addingTimeInterval(
-                    TimeInterval(-effectiveBreakDurationSeconds)
-                )
-                startBreakTimer()
-                appBlockingService?.blockApps()
-                return
-            } else {
-                screenTimeService?.clearBreakState()
-                appBlockingService?.unblockApps()
-                recordBreak(completed: true)
-                breaksTakenToday += 1
-            }
-        }
+        let now = Date()
 
-        if state == .breakActive, let breakStart = breakStartDate {
-            let breakElapsed = Int(Date().timeIntervalSince(breakStart))
-            if breakElapsed < effectiveBreakDurationSeconds {
-                breakSecondsRemaining = effectiveBreakDurationSeconds - breakElapsed
-                startBreakTimer()
-                appBlockingService?.blockApps()
-                return
+        while true {
+            if state == .active, let start = trackingStartDate {
+                let totalElapsed = Int(now.timeIntervalSince(start))
+
+                if totalElapsed < intervalSeconds {
+                    elapsedSeconds = totalElapsed
+                    startTimer()
+                    return
+                } else {
+                    state = .breakActive
+                    breakStartDate = start.addingTimeInterval(TimeInterval(intervalSeconds))
+                    breakSecondsRemaining = effectiveBreakDurationSeconds
+                    appBlockingService?.blockApps()
+                    SharedDefaults.shared.isBreakActive = true
+                    SharedDefaults.shared.breakEndDate = breakStartDate?.addingTimeInterval(
+                        TimeInterval(effectiveBreakDurationSeconds)
+                    )
+                    SharedDefaults.shared.blockReason = .eyeBreak
+                }
+            } else if state == .breakActive, let breakStart = breakStartDate {
+                let breakElapsed = Int(now.timeIntervalSince(breakStart))
+
+                if breakElapsed < effectiveBreakDurationSeconds {
+                    breakSecondsRemaining = effectiveBreakDurationSeconds - breakElapsed
+                    startBreakTimer()
+                    return
+                } else {
+                    appBlockingService?.unblockApps()
+                    screenTimeService?.clearBreakState()
+                    recordBreak(completed: true)
+                    breaksTakenToday += 1
+
+                    let breakEndTime = breakStart.addingTimeInterval(
+                        TimeInterval(effectiveBreakDurationSeconds)
+                    )
+                    breakStartDate = nil
+                    endCurrentSession()
+                    elapsedSeconds = 0
+                    trackingStartDate = breakEndTime
+                    startNewSession()
+                    state = .active
+                }
             } else {
-                appBlockingService?.unblockApps()
-                screenTimeService?.clearBreakState()
-                recordBreak(completed: true)
-                breaksTakenToday += 1
-                resetAfterBreak()
                 return
             }
-        }
-
-        if state == .active {
-            trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
-            startTimer()
         }
     }
     #endif

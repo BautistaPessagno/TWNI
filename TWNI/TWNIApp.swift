@@ -38,6 +38,10 @@ struct TWNIApp: App {
 
                     appBlockingService.refreshAuthorization()
                     await screenTimeService.refreshAuthorization()
+
+                    SharedDefaults.shared.intervalMinutes = timerManager.effectiveIntervalMinutes
+                    SharedDefaults.shared.breakDurationSeconds = timerManager.effectiveBreakDurationSeconds
+                    screenTimeService.registerAlwaysOnMonitor()
                     screenTimeService.syncAllSchedules()
                     #endif
 

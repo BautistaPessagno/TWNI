@@ -78,4 +78,63 @@ final class SharedDefaults: @unchecked Sendable {
             store.set(newValue?.uuidString, forKey: TWNIConstants.DefaultsKey.activeScheduleID)
         }
     }
+
+    // MARK: - Break App Selection (shared with extension)
+
+    var breakSelectionData: Data? {
+        get { store.data(forKey: TWNIConstants.DefaultsKey.breakSelectionData) }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakSelectionData) }
+    }
+
+    // MARK: - Timer Configuration (shared with extension)
+
+    var intervalMinutes: Int {
+        get {
+            let val = store.integer(forKey: TWNIConstants.DefaultsKey.intervalMinutes)
+            return val > 0 ? val : 20
+        }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.intervalMinutes) }
+    }
+
+    var breakDurationSeconds: Int {
+        get {
+            let val = store.integer(forKey: TWNIConstants.DefaultsKey.breakDurationSeconds)
+            return val > 0 ? val : 20
+        }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakDurationSeconds) }
+    }
+
+    // MARK: - Custom App Groups
+
+    var customAppGroups: [CustomAppGroup] {
+        get {
+            guard let data = store.data(forKey: TWNIConstants.DefaultsKey.customAppGroups),
+                  let decoded = try? JSONDecoder().decode([CustomAppGroup].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            let data = try? JSONEncoder().encode(newValue)
+            store.set(data, forKey: TWNIConstants.DefaultsKey.customAppGroups)
+        }
+    }
+
+    func customAppGroup(for id: UUID) -> CustomAppGroup? {
+        customAppGroups.first { $0.id == id }
+    }
+
+    func updateCustomAppGroup(_ group: CustomAppGroup) {
+        var all = customAppGroups
+        if let index = all.firstIndex(where: { $0.id == group.id }) {
+            all[index] = group
+        } else {
+            all.append(group)
+        }
+        customAppGroups = all
+    }
+
+    func removeCustomAppGroup(id: UUID) {
+        customAppGroups.removeAll { $0.id == id }
+    }
 }

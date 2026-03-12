@@ -44,5 +44,12 @@ struct BlockSchedule: Codable, Identifiable, Hashable {
     var startTime: ScheduleTimeOfDay = ScheduleTimeOfDay(hour: 9, minute: 0)
     var endTime: ScheduleTimeOfDay = ScheduleTimeOfDay(hour: 17, minute: 0)
     var categoryPresets: Set<String> = []
+    var customGroupIDs: Set<UUID> = []
+    var selectionData: Data?
+}
+
+struct CustomAppGroup: Codable, Identifiable, Hashable {
+    var id: UUID = UUID()
+    var name: String = "New Group"
     var selectionData: Data?
 }

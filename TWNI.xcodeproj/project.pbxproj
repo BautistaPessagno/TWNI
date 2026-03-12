@@ -42,6 +42,7 @@
 		AA000033 /* ScheduleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ScheduleModels.swift */; };
 		AA000034 /* TWNIDeviceActivityMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000002 /* TWNIDeviceActivityMonitor.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA000035 /* TWNIShieldConfiguration.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000003 /* TWNIShieldConfiguration.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA000036 /* SchedulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* SchedulesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +110,7 @@
 		AB000030 /* ShieldConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldConfigurationExtension.swift; sourceTree = "<group>"; };
 		AB000031 /* TWNIShieldConfiguration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNIShieldConfiguration.entitlements; sourceTree = "<group>"; };
 		AB000032 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB000033 /* SchedulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulesView.swift; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC000002 /* TWNIDeviceActivityMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIDeviceActivityMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC000003 /* TWNIShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -194,6 +196,7 @@
 				AB000010 /* BreakOverlayView.swift */,
 				AB000011 /* StatsView.swift */,
 				AB000012 /* SettingsView.swift */,
+				AB000033 /* SchedulesView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -436,6 +439,7 @@
 				AA000023 /* SharedConstants.swift in Sources */,
 				AA000024 /* SharedDefaults.swift in Sources */,
 				AA000025 /* ScheduleModels.swift in Sources */,
+				AA000036 /* SchedulesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -701,7 +705,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app.device-activity-monitor;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.device-activity-monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -731,7 +735,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app.device-activity-monitor;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.device-activity-monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -761,7 +765,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app.shield-configuration;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-configuration";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -791,7 +795,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app.shield-configuration;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-configuration";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
