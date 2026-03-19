@@ -30,7 +30,7 @@ struct ContentView: View {
             }
             .tint(Color.monoAccent)
 
-            if timerManager.state == .breakActive {
+            if timerManager.state == .breakActive || timerManager.state == .breakPending {
                 BreakOverlayView(timerManager: timerManager)
                     .transition(.opacity)
                     .zIndex(1)

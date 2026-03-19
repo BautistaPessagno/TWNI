@@ -9,10 +9,6 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
     private let scheduleStore = ManagedSettingsStore()
     private let breakStore = ManagedSettingsStore(named: .init("twni.break"))
 
-    private var isAlwaysOn: Bool {
-        false // helper; actual check done per-method via activity name
-    }
-
     override func intervalDidStart(for activity: DeviceActivityName) {
         if activity.rawValue == TWNIConstants.alwaysOnActivityName { return }
 
@@ -22,6 +18,8 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
 
         shared.activeScheduleID = scheduleID
         shared.blockReason = .scheduledBlock
+
+        guard shared.isBlockingEnabled else { return }
         applyShields(from: schedule.selectionData, to: scheduleStore)
     }
 
@@ -39,27 +37,18 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
         _ event: DeviceActivityEvent.Name,
         activity: DeviceActivityName
     ) {
-        let breakDuration = shared.breakDurationSeconds
-
-        if activity.rawValue == TWNIConstants.alwaysOnActivityName {
-            shared.blockReason = .eyeBreak
-            shared.isBreakActive = true
-            shared.breakEndDate = Date().addingTimeInterval(TimeInterval(breakDuration))
-            applyShields(from: shared.breakSelectionData, to: breakStore)
-            scheduleBreakNotification()
-            restartAlwaysOnMonitor()
-            return
-        }
-
-        guard let scheduleID = UUID(uuidString: activity.rawValue),
-              let schedule = shared.schedule(for: scheduleID) else { return }
-
+        shared.isBreakPending = true
         shared.blockReason = .eyeBreak
-        shared.isBreakActive = true
-        shared.breakEndDate = Date().addingTimeInterval(TimeInterval(breakDuration))
-
-        applyShields(from: schedule.selectionData, to: breakStore)
         scheduleBreakNotification()
+
+        if shared.isBlockingEnabled {
+            if activity.rawValue == TWNIConstants.alwaysOnActivityName {
+                applyShields(from: shared.breakSelectionData, to: breakStore)
+            } else if let scheduleID = UUID(uuidString: activity.rawValue),
+                      let schedule = shared.schedule(for: scheduleID) {
+                applyShields(from: schedule.selectionData, to: breakStore)
+            }
+        }
     }
 
     // MARK: - Shields
@@ -81,7 +70,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
     private func scheduleBreakNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Time for a break!"
-        content.body = "You've been looking at your screen. Look 20 feet away for 20 seconds."
+        content.body = "You've been looking at your screen. Open TWNI to start your eye break."
         content.sound = .default
         content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = "BREAK_REMINDER"
@@ -93,47 +82,5 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
         )
 
         UNUserNotificationCenter.current().add(request)
-    }
-
-    // MARK: - Re-register Always-On Monitor
-
-    private func restartAlwaysOnMonitor() {
-        let center = DeviceActivityCenter()
-        let activityName = DeviceActivityName(TWNIConstants.alwaysOnActivityName)
-        center.stopMonitoring([activityName])
-
-        let schedule = DeviceActivitySchedule(
-            intervalStart: DateComponents(hour: 0, minute: 0),
-            intervalEnd: DateComponents(hour: 23, minute: 59),
-            repeats: true
-        )
-
-        let thresholdMinutes = shared.intervalMinutes
-        let usageThreshold = DateComponents(minute: thresholdMinutes)
-
-        let eventName = DeviceActivityEvent.Name(TWNIConstants.alwaysOnActivityName + ".break")
-        let event: DeviceActivityEvent
-        if let selectionData = shared.breakSelectionData,
-           let selection = try? JSONDecoder().decode(
-               FamilyActivitySelection.self, from: selectionData
-           ) {
-            event = DeviceActivityEvent(
-                applications: selection.applicationTokens,
-                categories: selection.categoryTokens,
-                threshold: usageThreshold
-            )
-        } else {
-            event = DeviceActivityEvent(threshold: usageThreshold)
-        }
-
-        do {
-            try center.startMonitoring(
-                activityName,
-                during: schedule,
-                events: [eventName: event]
-            )
-        } catch {
-            print("Extension failed to restart always-on monitor: \(error)")
-        }
     }
 }

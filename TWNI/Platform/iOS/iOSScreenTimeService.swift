@@ -167,6 +167,7 @@ final class iOSScreenTimeService {
 
     func clearBreakState() {
         shared.isBreakActive = false
+        shared.isBreakPending = false
         shared.breakEndDate = nil
         if shared.blockReason == .eyeBreak {
             shared.blockReason = nil

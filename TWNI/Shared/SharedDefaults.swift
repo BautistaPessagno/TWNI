@@ -62,9 +62,19 @@ final class SharedDefaults: @unchecked Sendable {
         set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakActive) }
     }
 
+    var isBreakPending: Bool {
+        get { store.bool(forKey: TWNIConstants.DefaultsKey.breakPending) }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakPending) }
+    }
+
     var breakEndDate: Date? {
         get { store.object(forKey: TWNIConstants.DefaultsKey.breakEndDate) as? Date }
         set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakEndDate) }
+    }
+
+    var isBlockingEnabled: Bool {
+        get { store.bool(forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) }
     }
 
     // MARK: - Active Schedule

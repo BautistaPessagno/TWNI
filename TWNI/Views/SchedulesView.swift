@@ -1,5 +1,9 @@
 #if os(iOS)
 import SwiftUI
+#if canImport(FamilyControls)
+import FamilyControls
+import ManagedSettings
+#endif
 
 struct SchedulesView: View {
     var timerManager: TimerManager
@@ -109,7 +113,9 @@ struct SchedulesView: View {
     }
 
     private func saveSchedule(_ schedule: BlockSchedule) {
-        SharedDefaults.shared.updateSchedule(schedule)
+        var merged = schedule
+        mergeCustomGroupSelections(into: &merged)
+        SharedDefaults.shared.updateSchedule(merged)
         schedules = SharedDefaults.shared.schedules
         timerManager.screenTimeService?.syncAllSchedules()
     }
@@ -137,6 +143,37 @@ struct SchedulesView: View {
         SharedDefaults.shared.removeCustomAppGroup(id: group.id)
         customGroups = SharedDefaults.shared.customAppGroups
     }
+
+    // MARK: - Merge custom group selections into schedule
+
+    #if canImport(FamilyControls)
+    private func mergeCustomGroupSelections(into schedule: inout BlockSchedule) {
+        var mergedApps = Set<ApplicationToken>()
+        var mergedCategories = Set<ActivityCategoryToken>()
+
+        if let data = schedule.selectionData,
+           let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+            mergedApps = selection.applicationTokens
+            mergedCategories = selection.categoryTokens
+        }
+
+        let groups = SharedDefaults.shared.customAppGroups
+        for groupID in schedule.customGroupIDs {
+            guard let group = groups.first(where: { $0.id == groupID }),
+                  let data = group.selectionData,
+                  let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else { continue }
+            mergedApps.formUnion(selection.applicationTokens)
+            mergedCategories.formUnion(selection.categoryTokens)
+        }
+
+        var merged = FamilyActivitySelection()
+        merged.applicationTokens = mergedApps
+        merged.categoryTokens = mergedCategories
+        schedule.selectionData = try? JSONEncoder().encode(merged)
+    }
+    #else
+    private func mergeCustomGroupSelections(into schedule: inout BlockSchedule) {}
+    #endif
 }
 
 // MARK: - App Group Row
@@ -209,8 +246,14 @@ struct AppGroupEditorView: View {
         }
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
-        .onDisappear {
-            onSave(group)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    onSave(group)
+                    dismiss()
+                }
+                .fontWeight(.semibold)
+            }
         }
     }
 
@@ -313,13 +356,36 @@ struct ScheduleEditorView: View {
                         schedule.startTime = ScheduleTimeOfDay(
                             hour: comps.hour ?? 9, minute: comps.minute ?? 0
                         )
+                        // If start >= end, push end to start + 1 hour
+                        let startMinutes = (comps.hour ?? 9) * 60 + (comps.minute ?? 0)
+                        let endComps = Calendar.current.dateComponents([.hour, .minute], from: endDate)
+                        let endMinutes = (endComps.hour ?? 17) * 60 + (endComps.minute ?? 0)
+                        if startMinutes >= endMinutes {
+                            let newEndMinutes = startMinutes + 60
+                            let newHour = Swift.min(newEndMinutes / 60, 23)
+                            let newMinute = newEndMinutes >= 24 * 60 ? 59 : newEndMinutes % 60
+                            schedule.endTime = ScheduleTimeOfDay(hour: newHour, minute: newMinute)
+                            endDate = makeDate(from: schedule.endTime)
+                        }
                     }
                 DatePicker("End", selection: $endDate, displayedComponents: .hourAndMinute)
                     .onChange(of: endDate) {
                         let comps = Calendar.current.dateComponents([.hour, .minute], from: endDate)
-                        schedule.endTime = ScheduleTimeOfDay(
-                            hour: comps.hour ?? 17, minute: comps.minute ?? 0
-                        )
+                        let endMinutes = (comps.hour ?? 17) * 60 + (comps.minute ?? 0)
+                        let startComps = Calendar.current.dateComponents([.hour, .minute], from: startDate)
+                        let startMinutes = (startComps.hour ?? 9) * 60 + (startComps.minute ?? 0)
+                        // Clamp to at least start + 15 minutes
+                        let minEndMinutes = startMinutes + 15
+                        if endMinutes < minEndMinutes {
+                            let clampedHour = Swift.min(minEndMinutes / 60, 23)
+                            let clampedMinute = minEndMinutes >= 24 * 60 ? 59 : minEndMinutes % 60
+                            schedule.endTime = ScheduleTimeOfDay(hour: clampedHour, minute: clampedMinute)
+                            endDate = makeDate(from: schedule.endTime)
+                        } else {
+                            schedule.endTime = ScheduleTimeOfDay(
+                                hour: comps.hour ?? 17, minute: comps.minute ?? 0
+                            )
+                        }
                     }
             }
 
@@ -327,12 +393,8 @@ struct ScheduleEditorView: View {
                 WeekdayPicker(selectedDays: $schedule.weekdays)
             }
 
-            Section {
-                DisclosureGroup("Built-in Categories") {
-                    CategoryPresetsView(selectedPresets: $schedule.categoryPresets)
-                }
-
-                if !customGroups.isEmpty {
+            if !customGroups.isEmpty {
+                Section {
                     DisclosureGroup("Custom App Groups") {
                         ForEach(customGroups) { group in
                             Toggle(isOn: Binding(
@@ -349,12 +411,12 @@ struct ScheduleEditorView: View {
                             }
                         }
                     }
+                } header: {
+                    Text("App Groups")
+                } footer: {
+                    Text("Select your custom groups or use manual selection below for individual apps.")
+                        .font(.caption2)
                 }
-            } header: {
-                Text("App Groups")
-            } footer: {
-                Text("Select built-in categories or your custom groups. Use manual selection below for individual apps.")
-                    .font(.caption2)
             }
 
             #if canImport(FamilyControls)
@@ -382,13 +444,19 @@ struct ScheduleEditorView: View {
         }
         .navigationTitle(schedule.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    onSave(schedule)
+                    dismiss()
+                }
+                .fontWeight(.semibold)
+            }
+        }
         .onAppear {
             startDate = makeDate(from: schedule.startTime)
             endDate = makeDate(from: schedule.endTime)
             customGroups = SharedDefaults.shared.customAppGroups
-        }
-        .onDisappear {
-            onSave(schedule)
         }
     }
 
@@ -455,34 +523,9 @@ struct WeekdayPicker: View {
     }
 }
 
-// MARK: - Category Presets
-
-struct CategoryPresetsView: View {
-    @Binding var selectedPresets: Set<String>
-
-    var body: some View {
-        ForEach(CategoryPreset.allCases) { preset in
-            Toggle(isOn: Binding(
-                get: { selectedPresets.contains(preset.rawValue) },
-                set: { isOn in
-                    if isOn {
-                        selectedPresets.insert(preset.rawValue)
-                    } else {
-                        selectedPresets.remove(preset.rawValue)
-                    }
-                }
-            )) {
-                Label(preset.rawValue, systemImage: preset.systemImageName)
-            }
-        }
-    }
-}
-
 // MARK: - FamilyControls Pickers
 
 #if canImport(FamilyControls)
-import FamilyControls
-
 struct ScheduleAppPickerView: View {
     @Binding var schedule: BlockSchedule
 

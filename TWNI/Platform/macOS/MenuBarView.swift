@@ -33,6 +33,22 @@ struct MenuBarView: View {
                 }
             }
 
+            if timerManager.state == .breakPending {
+                Button("Start Break") {
+                    timerManager.claimBreak()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.monoAccent)
+                .frame(maxWidth: .infinity)
+
+                Button("Skip") {
+                    timerManager.skipBreak()
+                }
+                .buttonStyle(.bordered)
+                .tint(Color.monoAccent)
+                .frame(maxWidth: .infinity)
+            }
+
             if timerManager.state == .breakActive {
                 Button("Skip Break") {
                     timerManager.skipBreak()
@@ -108,8 +124,8 @@ private struct StateIndicator: View {
                         : .default,
                     value: pulse
                 )
-                .onAppear { pulse = state == .breakActive }
-                .onChange(of: state) { pulse = state == .breakActive }
+                .onAppear { pulse = state == .breakActive || state == .breakPending }
+                .onChange(of: state) { pulse = state == .breakActive || state == .breakPending }
 
             Text(label)
                 .font(.caption.weight(.semibold))
@@ -120,6 +136,7 @@ private struct StateIndicator: View {
     private var label: String {
         switch state {
         case .active: "Active"
+        case .breakPending: "Break Pending"
         case .breakActive: "Break"
         case .disabled: "Disabled"
         }
@@ -133,7 +150,14 @@ private struct MenuBarStatusDisplay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            if timerManager.state == .breakActive {
+            if timerManager.state == .breakPending {
+                Text("Time for an eye break")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.monoPrimary)
+                Text("Tap Start Break")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.monoSecondary)
+            } else if timerManager.state == .breakActive {
                 Text("Look away...")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.monoPrimary)

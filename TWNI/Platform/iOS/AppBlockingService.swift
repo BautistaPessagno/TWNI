@@ -11,8 +11,8 @@ import ManagedSettings
 final class AppBlockingService {
     var isAuthorized = false
     var isBlockingEnabled: Bool {
-        get { SharedDefaults.shared.store.bool(forKey: "appBlockingEnabled") }
-        set { SharedDefaults.shared.store.set(newValue, forKey: "appBlockingEnabled") }
+        get { SharedDefaults.shared.isBlockingEnabled }
+        set { SharedDefaults.shared.isBlockingEnabled = newValue }
     }
 
     #if canImport(FamilyControls)

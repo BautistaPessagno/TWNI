@@ -3,9 +3,42 @@ import SwiftUI
 struct DashboardView: View {
     var timerManager: TimerManager
 
+    #if os(iOS)
+    @State private var notificationsGranted = true
+    @State private var screenTimeAuthorized = true
+    #endif
+
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
+
+            #if os(iOS)
+            if !notificationsGranted {
+                SetupBannerView(
+                    icon: "bell.slash",
+                    message: "Notifications are disabled. Enable them to get break reminders.",
+                    buttonTitle: "Enable Notifications"
+                ) {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            }
+
+            if let blockingService = timerManager.appBlockingService,
+               blockingService.isAvailable, !screenTimeAuthorized {
+                SetupBannerView(
+                    icon: "hourglass",
+                    message: "Screen Time authorization is needed for app blocking and background break detection.",
+                    buttonTitle: "Authorize"
+                ) {
+                    Task {
+                        await blockingService.requestAuthorization()
+                        screenTimeAuthorized = blockingService.isAuthorized
+                    }
+                }
+            }
+            #endif
 
             StatusCard(timerManager: timerManager)
 
@@ -20,8 +53,53 @@ struct DashboardView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.monoSurface)
+        #if os(iOS)
+        .task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            notificationsGranted = settings.authorizationStatus == .authorized
+            if let blockingService = timerManager.appBlockingService, blockingService.isAvailable {
+                blockingService.refreshAuthorization()
+                screenTimeAuthorized = blockingService.isAuthorized
+            }
+        }
+        #endif
     }
 }
+
+// MARK: - Setup Banner
+
+#if os(iOS)
+private struct SetupBannerView: View {
+    let icon: String
+    let message: String
+    let buttonTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.monoSecondary)
+                Text(message)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.monoSecondary)
+                    .multilineTextAlignment(.leading)
+            }
+
+            Button(action: action) {
+                Text(buttonTitle)
+                    .font(.subheadline.weight(.heavy))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(MonochromePrimaryButtonStyle())
+        }
+        .padding(16)
+        .monochromeCard()
+    }
+}
+#endif
 
 // MARK: - Status Card
 
@@ -33,7 +111,7 @@ private struct StatusCard: View {
             Image(systemName: icon)
                 .font(.system(size: 48, weight: iconWeight))
                 .foregroundStyle(Color.monoPrimary.opacity(iconOpacity))
-                .symbolEffect(.pulse, isActive: timerManager.state == .breakActive)
+                .symbolEffect(.pulse, isActive: timerManager.state == .breakActive || timerManager.state == .breakPending)
 
             Text(title)
                 .font(.title2.weight(.heavy))
@@ -59,6 +137,7 @@ private struct StatusCard: View {
     private var icon: String {
         switch timerManager.state {
         case .active: "eye"
+        case .breakPending: "eye.fill"
         case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
@@ -67,6 +146,7 @@ private struct StatusCard: View {
     private var iconWeight: Font.Weight {
         switch timerManager.state {
         case .active: .regular
+        case .breakPending: .bold
         case .breakActive: .bold
         case .disabled: .light
         }
@@ -75,6 +155,7 @@ private struct StatusCard: View {
     private var iconOpacity: Double {
         switch timerManager.state {
         case .active: 1.0
+        case .breakPending: 1.0
         case .breakActive: 1.0
         case .disabled: 0.4
         }
@@ -89,6 +170,8 @@ private struct StatusCard: View {
                 return "Next break in \(minutes)m \(seconds)s"
             }
             return "Next break in \(seconds)s"
+        case .breakPending:
+            return "Break waiting"
         case .breakActive:
             return "Break in progress"
         case .disabled:
@@ -100,6 +183,8 @@ private struct StatusCard: View {
         switch timerManager.state {
         case .active:
             "Your eyes are being protected"
+        case .breakPending:
+            "Open the break screen to start"
         case .breakActive:
             "Look at something 20 feet away"
         case .disabled:

@@ -12,6 +12,11 @@ final class NotificationService: @unchecked Sendable {
         }
     }
 
+    func checkAuthorizationStatus() async -> Bool {
+        let settings = await center.notificationSettings()
+        return settings.authorizationStatus == .authorized
+    }
+
     func scheduleBreakNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Time for a break!"

@@ -10,6 +10,9 @@ struct SettingsView: View {
     @AppStorage("breakDurationSeconds") private var breakDurationSeconds: Int = 20
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
 
+    @State private var pendingMode: TimerMode?
+    @State private var showModeChangeAlert = false
+
     #if os(macOS)
     @State private var launchAtLogin = false
     #endif
@@ -19,7 +22,15 @@ struct SettingsView: View {
             Section("Mode") {
                 Picker("Protection Mode", selection: Binding(
                     get: { timerManager.timerMode },
-                    set: { timerManager.timerMode = $0 }
+                    set: { newMode in
+                        guard newMode != timerManager.timerMode else { return }
+                        if timerManager.state != .disabled {
+                            pendingMode = newMode
+                            showModeChangeAlert = true
+                        } else {
+                            timerManager.updateTimerMode(newMode)
+                        }
+                    }
                 )) {
                     Text("Auto (20-20-20)").tag(TimerMode.auto)
                     Text("Manual").tag(TimerMode.manual)
@@ -38,6 +49,10 @@ struct SettingsView: View {
                     )
                     .onChange(of: intervalMinutes) {
                         timerManager.intervalMinutes = intervalMinutes
+                        SharedDefaults.shared.intervalMinutes = intervalMinutes
+                        #if os(iOS)
+                        timerManager.screenTimeService?.restartAlwaysOnMonitor()
+                        #endif
                     }
 
                     Stepper(
@@ -48,6 +63,7 @@ struct SettingsView: View {
                     )
                     .onChange(of: breakDurationSeconds) {
                         timerManager.breakDurationSeconds = breakDurationSeconds
+                        SharedDefaults.shared.breakDurationSeconds = breakDurationSeconds
                     }
                 }
             }
@@ -92,6 +108,19 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .background(Color.monoSurface)
+        .alert("Change Mode?", isPresented: $showModeChangeAlert) {
+            Button("Change & Reset", role: .destructive) {
+                if let mode = pendingMode {
+                    timerManager.updateTimerMode(mode)
+                }
+                pendingMode = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingMode = nil
+            }
+        } message: {
+            Text("This will reset the current timer and start a new interval.")
+        }
         #if os(macOS)
         .frame(minWidth: 400, minHeight: 300)
         #endif

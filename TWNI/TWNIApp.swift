@@ -87,6 +87,9 @@ private struct MenuBarLabel: View {
             if timerManager.state == .active {
                 Text(countdownText)
                     .monospacedDigit()
+            } else if timerManager.state == .breakPending {
+                Text("!")
+                    .monospacedDigit()
             } else if timerManager.state == .breakActive {
                 Text("\(timerManager.breakSecondsRemaining)s")
                     .monospacedDigit()
@@ -97,6 +100,7 @@ private struct MenuBarLabel: View {
     private var icon: String {
         switch timerManager.state {
         case .active: "eye"
+        case .breakPending: "eye.fill"
         case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
