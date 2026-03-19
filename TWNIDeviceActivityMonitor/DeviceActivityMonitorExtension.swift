@@ -18,8 +18,6 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
 
         shared.activeScheduleID = scheduleID
         shared.blockReason = .scheduledBlock
-
-        guard shared.isBlockingEnabled else { return }
         applyShields(from: schedule.selectionData, to: scheduleStore)
     }
 

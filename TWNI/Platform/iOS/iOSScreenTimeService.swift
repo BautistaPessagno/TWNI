@@ -54,19 +54,7 @@ final class iOSScreenTimeService {
         let usageThreshold = DateComponents(minute: thresholdMinutes)
 
         let eventName = DeviceActivityEvent.Name(TWNIConstants.alwaysOnActivityName + ".break")
-        let event: DeviceActivityEvent
-        if let selectionData = shared.breakSelectionData,
-           let selection = try? JSONDecoder().decode(
-               FamilyActivitySelection.self, from: selectionData
-           ) {
-            event = DeviceActivityEvent(
-                applications: selection.applicationTokens,
-                categories: selection.categoryTokens,
-                threshold: usageThreshold
-            )
-        } else {
-            event = DeviceActivityEvent(threshold: usageThreshold)
-        }
+        let event = DeviceActivityEvent(threshold: usageThreshold)
 
         center.stopMonitoring([activityName])
 
@@ -113,19 +101,7 @@ final class iOSScreenTimeService {
         let usageThreshold = DateComponents(minute: shared.intervalMinutes)
 
         let eventName = DeviceActivityEvent.Name(schedule.id.uuidString + ".break")
-        let event: DeviceActivityEvent
-        if let selectionData = schedule.selectionData,
-           let selection = try? JSONDecoder().decode(
-               FamilyActivitySelection.self, from: selectionData
-           ) {
-            event = DeviceActivityEvent(
-                applications: selection.applicationTokens,
-                categories: selection.categoryTokens,
-                threshold: usageThreshold
-            )
-        } else {
-            event = DeviceActivityEvent(threshold: usageThreshold)
-        }
+        let event = DeviceActivityEvent(threshold: usageThreshold)
 
         do {
             try center.startMonitoring(
