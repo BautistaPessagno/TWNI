@@ -4,6 +4,7 @@ struct BreakOverlayView: View {
     var timerManager: TimerManager
 
     @State private var animateGlow = false
+    @State private var skipButtonVisible = false
 
     var body: some View {
         ZStack {
@@ -70,22 +71,32 @@ struct BreakOverlayView: View {
                 .buttonStyle(MonochromePrimaryButtonStyle())
                 .padding(.horizontal, 32)
 
-                Button {
-                    timerManager.skipBreak()
-                } label: {
-                    Text("Skip")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.monoSecondary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(Color.monoCard, in: Capsule())
-                        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
+                if timerManager.canSkip && skipButtonVisible {
+                    Button {
+                        timerManager.skipBreak()
+                    } label: {
+                        Text("Skip (\(timerManager.remainingSkips) left)")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.monoSecondary)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 10)
+                            .background(Color.monoCard, in: Capsule())
+                            .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
-                .buttonStyle(.plain)
             }
             .padding(.bottom, 40)
         }
         .padding()
+        .task {
+            skipButtonVisible = false
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            withAnimation(.easeInOut(duration: 0.3)) {
+                skipButtonVisible = true
+            }
+        }
     }
 
     // MARK: - Break Active (countdown)
@@ -117,25 +128,27 @@ struct BreakOverlayView: View {
 
             BreakCountdownRing(
                 remaining: timerManager.breakSecondsRemaining,
-                total: timerManager.breakDurationSeconds,
+                total: timerManager.effectiveBreakDurationSeconds,
                 progress: timerManager.breakProgress
             )
 
             Spacer()
 
-            Button {
-                timerManager.skipBreak()
-            } label: {
-                Text("Skip break")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.monoSecondary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .background(Color.monoCard, in: Capsule())
-                    .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
+            if timerManager.canSkip {
+                Button {
+                    timerManager.skipBreak()
+                } label: {
+                    Text("Skip break (\(timerManager.remainingSkips) left)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.monoSecondary)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Color.monoCard, in: Capsule())
+                        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 40)
             }
-            .buttonStyle(.plain)
-            .padding(.bottom, 40)
         }
         .padding()
     }

@@ -41,16 +41,18 @@ struct MenuBarView: View {
                 .tint(Color.monoAccent)
                 .frame(maxWidth: .infinity)
 
-                Button("Skip") {
-                    timerManager.skipBreak()
+                if timerManager.canSkip {
+                    Button("Skip (\(timerManager.remainingSkips) left)") {
+                        timerManager.skipBreak()
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color.monoAccent)
+                    .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
-                .tint(Color.monoAccent)
-                .frame(maxWidth: .infinity)
             }
 
-            if timerManager.state == .breakActive {
-                Button("Skip Break") {
+            if timerManager.state == .breakActive, timerManager.canSkip {
+                Button("Skip (\(timerManager.remainingSkips) left)") {
                     timerManager.skipBreak()
                 }
                 .buttonStyle(.bordered)

@@ -3,6 +3,7 @@ import SwiftUI
 import SwiftData
 import Combine
 import AudioToolbox
+import QuartzCore
 
 enum TimerState: String {
     case active
@@ -87,6 +88,31 @@ final class TimerManager {
     private var idlePaused = false
     nonisolated(unsafe) private var lifecycleObservers: [NSObjectProtocol] = []
 
+    #if os(iOS)
+    private var savedMachTime: CFTimeInterval = 0
+    #endif
+
+    // Skip cooldown
+    private let maxSkipsPerDay = 3
+
+    var skipsToday: Int {
+        get { UserDefaults.standard.integer(forKey: "skipsToday") }
+        set { UserDefaults.standard.set(newValue, forKey: "skipsToday") }
+    }
+
+    private var lastSkipResetDate: Date? {
+        get { UserDefaults.standard.object(forKey: "lastSkipResetDate") as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: "lastSkipResetDate") }
+    }
+
+    var canSkip: Bool {
+        skipsToday < maxSkipsPerDay
+    }
+
+    var remainingSkips: Int {
+        Swift.max(maxSkipsPerDay - skipsToday, 0)
+    }
+
     private(set) var notificationService = NotificationService()
 
     #if os(iOS)
@@ -102,6 +128,7 @@ final class TimerManager {
 
     func configure(modelContext: ModelContext) {
         self.modelContext = modelContext
+        resetSkipsIfNewDay()
         loadTodayStats()
         enable()
         setupAppLifecycleObservers()
@@ -154,17 +181,30 @@ final class TimerManager {
     }
 
     func skipBreak() {
-        if state == .breakActive || state == .breakPending {
-            #if os(iOS)
-            appBlockingService?.unblockApps()
-            screenTimeService?.clearBreakState()
-            SharedDefaults.shared.isBreakPending = false
-            #endif
-        }
+        guard state == .breakActive || state == .breakPending else { return }
+        resetSkipsIfNewDay()
+        guard canSkip else { return }
+
+        #if os(iOS)
+        appBlockingService?.unblockApps()
+        screenTimeService?.clearBreakState()
+        SharedDefaults.shared.isBreakPending = false
+        SharedDefaults.shared.isBreakActive = false
+        #endif
         notificationService.cancelBreakEndNotification()
         recordBreak(completed: false)
         breaksSkippedToday += 1
+        skipsToday += 1
         resetAfterBreak()
+    }
+
+    private func resetSkipsIfNewDay() {
+        if let lastReset = lastSkipResetDate,
+           Calendar.current.isDateInToday(lastReset) {
+            return
+        }
+        skipsToday = 0
+        lastSkipResetDate = Date()
     }
 
     func updateTimerMode(_ newMode: TimerMode) {
@@ -218,21 +258,27 @@ final class TimerManager {
             elapsedSeconds = Int(Date().timeIntervalSince(start))
         }
 
+        #if os(iOS)
+        // DeviceActivity is the sole break trigger on iOS.
+        // Poll SharedDefaults for extension-triggered breaks.
+        if SharedDefaults.shared.isBreakPending {
+            stopTimer()
+            state = .breakPending
+            notificationService.scheduleBreakNotification()
+            SharedDefaults.shared.blockReason = .eyeBreak
+            appBlockingService?.blockApps()
+        }
+        #else
         if elapsedSeconds >= intervalSeconds {
             triggerBreak()
         }
+        #endif
     }
 
     private func triggerBreak() {
         stopTimer()
         state = .breakPending
         notificationService.scheduleBreakNotification()
-
-        #if os(iOS)
-        SharedDefaults.shared.isBreakPending = true
-        SharedDefaults.shared.blockReason = .eyeBreak
-        appBlockingService?.blockApps()
-        #endif
     }
 
     private func startBreakTimer() {
@@ -259,6 +305,7 @@ final class TimerManager {
         appBlockingService?.unblockApps()
         screenTimeService?.clearBreakState()
         SharedDefaults.shared.isBreakPending = false
+        SharedDefaults.shared.isBreakActive = false
         #endif
         notificationService.cancelBreakEndNotification()
         if soundEnabled { playBreakEndSound() }
@@ -411,6 +458,7 @@ final class TimerManager {
     #if os(iOS)
     private func handleiOSBackground() {
         savedElapsedSeconds = elapsedSeconds
+        savedMachTime = CACurrentMediaTime()
         stopTimer()
 
         if state == .breakActive, breakSecondsRemaining > 0 {
@@ -426,6 +474,7 @@ final class TimerManager {
         // Extension triggered break while backgrounded
         if SharedDefaults.shared.isBreakPending, state == .active {
             state = .breakPending
+            notificationService.scheduleBreakNotification()
             SharedDefaults.shared.blockReason = .eyeBreak
             appBlockingService?.blockApps()
             return
@@ -448,7 +497,13 @@ final class TimerManager {
         }
 
         if state == .active {
-            elapsedSeconds = savedElapsedSeconds
+            if savedMachTime > 0 {
+                let deviceAwakeTime = Swift.max(CACurrentMediaTime() - savedMachTime, 0)
+                elapsedSeconds = savedElapsedSeconds + Int(deviceAwakeTime)
+                savedMachTime = 0
+            } else {
+                elapsedSeconds = savedElapsedSeconds
+            }
             trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
             startTimer()
         }
