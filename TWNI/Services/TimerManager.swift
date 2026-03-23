@@ -3,7 +3,6 @@ import SwiftUI
 import SwiftData
 import Combine
 import AudioToolbox
-import QuartzCore
 
 enum TimerState: String {
     case active
@@ -87,10 +86,6 @@ final class TimerManager {
     private var modelContext: ModelContext?
     private var idlePaused = false
     nonisolated(unsafe) private var lifecycleObservers: [NSObjectProtocol] = []
-
-    #if os(iOS)
-    private var savedMachTime: CFTimeInterval = 0
-    #endif
 
     // Skip cooldown
     private let maxSkipsPerDay = 3
@@ -259,26 +254,32 @@ final class TimerManager {
         }
 
         #if os(iOS)
-        // DeviceActivity is the sole break trigger on iOS.
-        // Poll SharedDefaults for extension-triggered breaks.
+        // Pick up breaks triggered by DeviceActivity extension
         if SharedDefaults.shared.isBreakPending {
             stopTimer()
             state = .breakPending
             notificationService.scheduleBreakNotification()
             SharedDefaults.shared.blockReason = .eyeBreak
             appBlockingService?.blockApps()
+            return
         }
-        #else
+        #endif
+        // Trigger break when interval elapsed (foreground time only on iOS)
         if elapsedSeconds >= intervalSeconds {
             triggerBreak()
         }
-        #endif
     }
 
     private func triggerBreak() {
         stopTimer()
         state = .breakPending
         notificationService.scheduleBreakNotification()
+
+        #if os(iOS)
+        SharedDefaults.shared.isBreakPending = true
+        SharedDefaults.shared.blockReason = .eyeBreak
+        appBlockingService?.blockApps()
+        #endif
     }
 
     private func startBreakTimer() {
@@ -458,7 +459,6 @@ final class TimerManager {
     #if os(iOS)
     private func handleiOSBackground() {
         savedElapsedSeconds = elapsedSeconds
-        savedMachTime = CACurrentMediaTime()
         stopTimer()
 
         if state == .breakActive, breakSecondsRemaining > 0 {
@@ -497,13 +497,7 @@ final class TimerManager {
         }
 
         if state == .active {
-            if savedMachTime > 0 {
-                let deviceAwakeTime = Swift.max(CACurrentMediaTime() - savedMachTime, 0)
-                elapsedSeconds = savedElapsedSeconds + Int(deviceAwakeTime)
-                savedMachTime = 0
-            } else {
-                elapsedSeconds = savedElapsedSeconds
-            }
+            elapsedSeconds = savedElapsedSeconds
             trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
             startTimer()
         }
