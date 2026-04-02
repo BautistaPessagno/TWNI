@@ -64,7 +64,7 @@ final class TimerManager {
 
     var progress: Double {
         guard intervalSeconds > 0 else { return 0 }
-        return Swift.min(Double(elapsedSeconds) / Double(intervalSeconds), 1.0)
+        return Swift.min(Double(elapsedSeconds % intervalSeconds) / Double(intervalSeconds), 1.0)
     }
 
     var breakProgress: Double {
@@ -73,7 +73,7 @@ final class TimerManager {
     }
 
     var secondsUntilBreak: Int {
-        Swift.max(intervalSeconds - elapsedSeconds, 0)
+        Swift.max(nextBreakAtSeconds - elapsedSeconds, 0)
     }
 
     // MARK: - Internal
@@ -82,6 +82,8 @@ final class TimerManager {
     private var trackingStartDate: Date?
     private var breakStartDate: Date?
     private var savedElapsedSeconds: Int = 0
+    private var nextBreakAtSeconds: Int = 0
+    private var breakTriggerDate: Date?
     private var currentSession: ScreenSession?
     private var modelContext: ModelContext?
     private var idlePaused = false
@@ -135,6 +137,8 @@ final class TimerManager {
         guard state == .disabled else { return }
         elapsedSeconds = 0
         savedElapsedSeconds = 0
+        nextBreakAtSeconds = intervalSeconds
+        breakTriggerDate = nil
         trackingStartDate = Date()
         startNewSession()
         state = .active
@@ -145,6 +149,8 @@ final class TimerManager {
         state = .disabled
         elapsedSeconds = 0
         savedElapsedSeconds = 0
+        nextBreakAtSeconds = 0
+        breakTriggerDate = nil
         idlePaused = false
         stopTimer()
         endCurrentSession()
@@ -205,10 +211,22 @@ final class TimerManager {
     func updateTimerMode(_ newMode: TimerMode) {
         timerMode = newMode
         if state == .breakActive || state == .breakPending {
-            skipBreak()
+            // Force reset — mode change overrides skip cooldown
+            #if os(iOS)
+            appBlockingService?.unblockApps()
+            screenTimeService?.clearBreakState()
+            SharedDefaults.shared.isBreakPending = false
+            SharedDefaults.shared.isBreakActive = false
+            #endif
+            notificationService.cancelBreakEndNotification()
+            recordBreak(completed: false)
+            breaksSkippedToday += 1
+            resetAfterBreak()
         } else if state == .active {
             elapsedSeconds = 0
             savedElapsedSeconds = 0
+            nextBreakAtSeconds = effectiveIntervalMinutes * 60
+            breakTriggerDate = nil
             trackingStartDate = Date()
             stopTimer()
             startTimer()
@@ -218,6 +236,11 @@ final class TimerManager {
         SharedDefaults.shared.breakDurationSeconds = effectiveBreakDurationSeconds
         screenTimeService?.restartAlwaysOnMonitor()
         #endif
+    }
+
+    func handleIntervalChanged() {
+        guard state == .active else { return }
+        nextBreakAtSeconds = elapsedSeconds + intervalSeconds
     }
 
     // MARK: - Idle Detection (macOS)
@@ -264,14 +287,15 @@ final class TimerManager {
             return
         }
         #endif
-        // Trigger break when interval elapsed (foreground time only on iOS)
-        if elapsedSeconds >= intervalSeconds {
+        // Trigger break when cumulative screen time crosses next boundary
+        if elapsedSeconds >= nextBreakAtSeconds {
             triggerBreak()
         }
     }
 
     private func triggerBreak() {
         stopTimer()
+        breakTriggerDate = Date()
         state = .breakPending
         notificationService.scheduleBreakNotification()
 
@@ -326,10 +350,25 @@ final class TimerManager {
     private func resetAfterBreak() {
         breakStartDate = nil
         endCurrentSession()
-        elapsedSeconds = 0
-        savedElapsedSeconds = 0
+
+        // Exclude break wall-clock time from cumulative screen time
+        if let triggerDate = breakTriggerDate {
+            let breakWallClock = Date().timeIntervalSince(triggerDate)
+            trackingStartDate = trackingStartDate?.addingTimeInterval(breakWallClock)
+        }
+        breakTriggerDate = nil
+
+        // Sync elapsedSeconds immediately so it's correct if the app
+        // backgrounds between now and the next tick
+        if let start = trackingStartDate {
+            elapsedSeconds = Int(Date().timeIntervalSince(start))
+        }
+        savedElapsedSeconds = elapsedSeconds
+
+        // Advance to next cycle boundary
+        nextBreakAtSeconds += intervalSeconds
+
         idlePaused = false
-        trackingStartDate = Date()
         startNewSession()
         state = .active
         startTimer()
@@ -496,10 +535,17 @@ final class TimerManager {
             }
         }
 
-        if state == .active {
-            elapsedSeconds = savedElapsedSeconds
-            trackingStartDate = Date().addingTimeInterval(TimeInterval(-elapsedSeconds))
-            startTimer()
+        if state == .active, let start = trackingStartDate {
+            elapsedSeconds = Int(Date().timeIntervalSince(start))
+            // Catch up past any fully-missed cycles
+            while nextBreakAtSeconds + intervalSeconds <= elapsedSeconds {
+                nextBreakAtSeconds += intervalSeconds
+            }
+            if elapsedSeconds >= nextBreakAtSeconds {
+                triggerBreak()
+            } else {
+                startTimer()
+            }
         }
     }
     #endif
@@ -508,8 +554,9 @@ final class TimerManager {
 
     #if os(macOS)
     private func handleMacOSBackground() {
-        if state == .active {
-            let remainingSeconds = intervalSeconds - elapsedSeconds
+        if state == .active, let start = trackingStartDate {
+            let actualElapsed = Int(Date().timeIntervalSince(start))
+            let remainingSeconds = nextBreakAtSeconds - actualElapsed
             if remainingSeconds > 0 {
                 notificationService.scheduleTimerNotification(afterSeconds: remainingSeconds)
             }
@@ -523,6 +570,7 @@ final class TimerManager {
 
     private func handleMacOSForeground() {
         stopTimer()
+        idlePaused = false
         notificationService.cancelPendingNotifications()
         notificationService.cancelBreakEndNotification()
 
@@ -530,14 +578,17 @@ final class TimerManager {
 
         if state == .active, let start = trackingStartDate {
             let totalElapsed = Int(now.timeIntervalSince(start))
+            elapsedSeconds = totalElapsed
 
-            if totalElapsed < intervalSeconds {
-                elapsedSeconds = totalElapsed
-                startTimer()
+            // Catch up past any fully-missed cycles
+            while nextBreakAtSeconds + intervalSeconds <= elapsedSeconds {
+                nextBreakAtSeconds += intervalSeconds
+            }
+
+            if totalElapsed >= nextBreakAtSeconds {
+                triggerBreak()
             } else {
-                // Interval expired while in background — enter breakPending
-                state = .breakPending
-                notificationService.scheduleBreakNotification()
+                startTimer()
             }
         } else if state == .breakPending {
             // Still pending, keep showing overlay
@@ -548,16 +599,7 @@ final class TimerManager {
                 breakSecondsRemaining = effectiveBreakDurationSeconds - breakElapsed
                 startBreakTimer()
             } else {
-                recordBreak(completed: true)
-                breaksTakenToday += 1
-                breakStartDate = nil
-                endCurrentSession()
-                elapsedSeconds = 0
-                idlePaused = false
-                trackingStartDate = Date()
-                startNewSession()
-                state = .active
-                startTimer()
+                completeBreak()
             }
         }
     }

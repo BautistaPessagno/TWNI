@@ -164,12 +164,11 @@ private struct StatusCard: View {
     private var title: String {
         switch timerManager.state {
         case .active:
-            let minutes = timerManager.secondsUntilBreak / 60
-            let seconds = timerManager.secondsUntilBreak % 60
-            if minutes > 0 {
-                return "Next break in \(minutes)m \(seconds)s"
+            let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
+            if minutesLeft > 0 {
+                return "~\(minutesLeft)m until break"
             }
-            return "Next break in \(seconds)s"
+            return "Break soon"
         case .breakPending:
             return "Break waiting"
         case .breakActive:
@@ -182,13 +181,14 @@ private struct StatusCard: View {
     private var subtitle: String {
         switch timerManager.state {
         case .active:
-            "Your eyes are being protected"
+            let cycleMinutes = (timerManager.elapsedSeconds % timerManager.intervalSeconds) / 60
+            return "\(cycleMinutes)m of \(timerManager.effectiveIntervalMinutes)m screen time"
         case .breakPending:
-            "Open the break screen to start"
+            return "Open the break screen to start"
         case .breakActive:
-            "Look at something 20 feet away"
+            return "Look at something 20 feet away"
         case .disabled:
-            "Enable to start protecting your eyes"
+            return "Enable to start protecting your eyes"
         }
     }
 }

@@ -49,6 +49,7 @@ struct SettingsView: View {
                     )
                     .onChange(of: intervalMinutes) {
                         timerManager.intervalMinutes = intervalMinutes
+                        timerManager.handleIntervalChanged()
                         SharedDefaults.shared.intervalMinutes = intervalMinutes
                         #if os(iOS)
                         timerManager.screenTimeService?.restartAlwaysOnMonitor()

@@ -170,12 +170,11 @@ private struct MenuBarStatusDisplay: View {
                 ProgressView(value: timerManager.breakProgress)
                     .tint(Color.monoProgressFill)
             } else if timerManager.state == .active {
-                let minutes = timerManager.secondsUntilBreak / 60
-                let seconds = timerManager.secondsUntilBreak % 60
+                let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
                 Text("Next break in")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.monoSecondary)
-                Text(String(format: "%02d:%02d", minutes, seconds))
+                Text("~\(minutesLeft)m")
                     .font(.system(size: 36, weight: .light, design: .monospaced))
                     .foregroundStyle(Color.monoPrimary)
 
