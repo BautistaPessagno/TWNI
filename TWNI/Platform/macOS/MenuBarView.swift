@@ -34,7 +34,7 @@ struct MenuBarView: View {
             }
 
             if timerManager.state == .breakPending {
-                Button("Start Break") {
+                Button("Claim Break") {
                     timerManager.claimBreak()
                 }
                 .buttonStyle(.borderedProminent)
@@ -49,15 +49,6 @@ struct MenuBarView: View {
                     .tint(Color.monoAccent)
                     .frame(maxWidth: .infinity)
                 }
-            }
-
-            if timerManager.state == .breakActive, timerManager.canSkip {
-                Button("Skip (\(timerManager.remainingSkips) left)") {
-                    timerManager.skipBreak()
-                }
-                .buttonStyle(.bordered)
-                .tint(Color.monoAccent)
-                .frame(maxWidth: .infinity)
             }
 
             Divider()
@@ -121,13 +112,13 @@ private struct StateIndicator: View {
                 .frame(width: 8, height: 8)
                 .scaleEffect(pulse ? 1.3 : 1.0)
                 .animation(
-                    state == .breakActive
+                    state == .breakPending
                         ? .easeInOut(duration: 1).repeatForever(autoreverses: true)
                         : .default,
                     value: pulse
                 )
-                .onAppear { pulse = state == .breakActive || state == .breakPending }
-                .onChange(of: state) { pulse = state == .breakActive || state == .breakPending }
+                .onAppear { pulse = state == .breakPending }
+                .onChange(of: state) { pulse = state == .breakPending }
 
             Text(label)
                 .font(.caption.weight(.semibold))
@@ -139,7 +130,6 @@ private struct StateIndicator: View {
         switch state {
         case .active: "Active"
         case .breakPending: "Break Pending"
-        case .breakActive: "Break"
         case .disabled: "Disabled"
         }
     }
@@ -156,19 +146,9 @@ private struct MenuBarStatusDisplay: View {
                 Text("Time for an eye break")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.monoPrimary)
-                Text("Tap Start Break")
+                Text("Tap Claim Break to rest your eyes")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Color.monoSecondary)
-            } else if timerManager.state == .breakActive {
-                Text("Look away...")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.monoPrimary)
-                Text("\(timerManager.breakSecondsRemaining)s")
-                    .font(.system(size: 36, weight: .light, design: .monospaced))
-                    .foregroundStyle(Color.monoPrimary)
-
-                ProgressView(value: timerManager.breakProgress)
-                    .tint(Color.monoProgressFill)
             } else if timerManager.state == .active {
                 let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
                 Text("Next break in")

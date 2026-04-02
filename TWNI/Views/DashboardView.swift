@@ -111,7 +111,7 @@ private struct StatusCard: View {
             Image(systemName: icon)
                 .font(.system(size: 48, weight: iconWeight))
                 .foregroundStyle(Color.monoPrimary.opacity(iconOpacity))
-                .symbolEffect(.pulse, isActive: timerManager.state == .breakActive || timerManager.state == .breakPending)
+                .symbolEffect(.pulse, isActive: timerManager.state == .breakPending)
 
             Text(title)
                 .font(.title2.weight(.heavy))
@@ -138,7 +138,6 @@ private struct StatusCard: View {
         switch timerManager.state {
         case .active: "eye"
         case .breakPending: "eye.fill"
-        case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
     }
@@ -147,7 +146,6 @@ private struct StatusCard: View {
         switch timerManager.state {
         case .active: .regular
         case .breakPending: .bold
-        case .breakActive: .bold
         case .disabled: .light
         }
     }
@@ -156,7 +154,6 @@ private struct StatusCard: View {
         switch timerManager.state {
         case .active: 1.0
         case .breakPending: 1.0
-        case .breakActive: 1.0
         case .disabled: 0.4
         }
     }
@@ -170,9 +167,7 @@ private struct StatusCard: View {
             }
             return "Break soon"
         case .breakPending:
-            return "Break waiting"
-        case .breakActive:
-            return "Break in progress"
+            return "Claim your break"
         case .disabled:
             return "Protection disabled"
         }
@@ -184,9 +179,7 @@ private struct StatusCard: View {
             let cycleMinutes = (timerManager.elapsedSeconds % timerManager.intervalSeconds) / 60
             return "\(cycleMinutes)m of \(timerManager.effectiveIntervalMinutes)m screen time"
         case .breakPending:
-            return "Open the break screen to start"
-        case .breakActive:
-            return "Look at something 20 feet away"
+            return "Look away for 20 seconds, then claim"
         case .disabled:
             return "Enable to start protecting your eyes"
         }
