@@ -16,5 +16,8 @@ enum TWNIConstants {
         static let breakDurationSeconds = "twni_breakDurationSeconds"
         static let customAppGroups = "twni_customAppGroups"
         static let appBlockingEnabled = "appBlockingEnabled"
+        static let breakCycleCount = "twni_breakCycleCount"
+        static let cycleStartDate = "twni_cycleStartDate"
+        static let breakCountdownActive = "twni_breakCountdownActive"
     }
 }

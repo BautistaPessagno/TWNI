@@ -39,9 +39,6 @@ struct TWNIApp: App {
                     appBlockingService.refreshAuthorization()
                     await screenTimeService.refreshAuthorization()
 
-                    SharedDefaults.shared.intervalMinutes = timerManager.effectiveIntervalMinutes
-                    SharedDefaults.shared.breakDurationSeconds = timerManager.effectiveBreakDurationSeconds
-                    screenTimeService.registerAlwaysOnMonitor()
                     screenTimeService.syncAllSchedules()
                     #endif
 
@@ -84,11 +81,14 @@ private struct MenuBarLabel: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-            if timerManager.state == .active {
+            if timerManager.state == .monitoring {
                 Text(countdownText)
                     .monospacedDigit()
             } else if timerManager.state == .breakPending {
                 Text("!")
+                    .monospacedDigit()
+            } else if timerManager.state == .breakActive {
+                Text("\(timerManager.breakSecondsRemaining)s")
                     .monospacedDigit()
             }
         }
@@ -96,8 +96,9 @@ private struct MenuBarLabel: View {
 
     private var icon: String {
         switch timerManager.state {
-        case .active: "eye"
+        case .monitoring: "eye"
         case .breakPending: "eye.fill"
+        case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
     }

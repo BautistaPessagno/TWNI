@@ -94,15 +94,9 @@ final class NotificationService: @unchecked Sendable {
             options: .foreground
         )
 
-        let skipAction = UNNotificationAction(
-            identifier: "SKIP_BREAK",
-            title: "Skip",
-            options: .destructive
-        )
-
         let category = UNNotificationCategory(
             identifier: "BREAK_REMINDER",
-            actions: [startAction, skipAction],
+            actions: [startAction],
             intentIdentifiers: []
         )
 

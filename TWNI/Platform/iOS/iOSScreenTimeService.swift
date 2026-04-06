@@ -50,7 +50,8 @@ final class iOSScreenTimeService {
             repeats: true
         )
 
-        let thresholdMinutes = shared.intervalMinutes
+        let cycleCount = shared.breakCycleCount
+        let thresholdMinutes = (cycleCount + 1) * 20
         let usageThreshold = DateComponents(minute: thresholdMinutes)
 
         let eventName = DeviceActivityEvent.Name(TWNIConstants.alwaysOnActivityName + ".break")
@@ -103,7 +104,8 @@ final class iOSScreenTimeService {
             repeats: true
         )
 
-        let usageThreshold = DateComponents(minute: shared.intervalMinutes)
+        let cycleCount = shared.breakCycleCount
+        let usageThreshold = DateComponents(minute: (cycleCount + 1) * 20)
 
         let eventName = DeviceActivityEvent.Name(schedule.id.uuidString + ".break")
         let event = DeviceActivityEvent(
@@ -154,6 +156,7 @@ final class iOSScreenTimeService {
     func clearBreakState() {
         shared.isBreakActive = false
         shared.isBreakPending = false
+        shared.isBreakCountdownActive = false
         shared.breakEndDate = nil
         if shared.blockReason == .eyeBreak {
             shared.blockReason = nil

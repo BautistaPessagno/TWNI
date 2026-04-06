@@ -77,6 +77,21 @@ final class SharedDefaults: @unchecked Sendable {
         set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) }
     }
 
+    var breakCycleCount: Int {
+        get { store.integer(forKey: TWNIConstants.DefaultsKey.breakCycleCount) }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakCycleCount) }
+    }
+
+    var isBreakCountdownActive: Bool {
+        get { store.bool(forKey: TWNIConstants.DefaultsKey.breakCountdownActive) }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.breakCountdownActive) }
+    }
+
+    var cycleStartDate: Date? {
+        get { store.object(forKey: TWNIConstants.DefaultsKey.cycleStartDate) as? Date }
+        set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.cycleStartDate) }
+    }
+
     // MARK: - Active Schedule
 
     var activeScheduleID: UUID? {

@@ -51,6 +51,15 @@ struct MenuBarView: View {
                 }
             }
 
+            if timerManager.state == .breakActive {
+                VStack(spacing: 4) {
+                    Text("Look away — \(timerManager.breakSecondsRemaining)s")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.monoPrimary)
+                        .monospacedDigit()
+                }
+            }
+
             Divider()
 
             // Stats
@@ -128,8 +137,9 @@ private struct StateIndicator: View {
 
     private var label: String {
         switch state {
-        case .active: "Active"
+        case .monitoring: "Active"
         case .breakPending: "Break Pending"
+        case .breakActive: "Break Active"
         case .disabled: "Disabled"
         }
     }
@@ -149,7 +159,14 @@ private struct MenuBarStatusDisplay: View {
                 Text("Tap Claim Break to rest your eyes")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Color.monoSecondary)
-            } else if timerManager.state == .active {
+            } else if timerManager.state == .breakActive {
+                Text("Look away")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.monoPrimary)
+                Text("\(timerManager.breakSecondsRemaining)s")
+                    .font(.system(size: 36, weight: .light, design: .monospaced))
+                    .foregroundStyle(Color.monoPrimary)
+            } else if timerManager.state == .monitoring {
                 let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
                 Text("Next break in")
                     .font(.caption.weight(.semibold))

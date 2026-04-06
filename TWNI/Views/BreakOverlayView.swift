@@ -22,7 +22,14 @@ struct BreakOverlayView: View {
             MotionLinesView(animate: true, lineCount: 12, opacity: 0.08)
                 .ignoresSafeArea()
 
-            pendingContent
+            switch timerManager.state {
+            case .breakPending:
+                pendingContent
+            case .breakActive:
+                activeContent
+            default:
+                EmptyView()
+            }
         }
     }
 
@@ -96,4 +103,39 @@ struct BreakOverlayView: View {
     }
 
     // MARK: - Break Active (countdown)
+
+    private var activeContent: some View {
+        VStack(spacing: 40) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .stroke(Color.monoProgressTrack, lineWidth: 6)
+                    .frame(width: 160, height: 160)
+
+                Circle()
+                    .trim(from: 0, to: Double(timerManager.breakSecondsRemaining) / 20.0)
+                    .stroke(Color.monoPrimary, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 160, height: 160)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 1), value: timerManager.breakSecondsRemaining)
+
+                Text("\(timerManager.breakSecondsRemaining)")
+                    .font(.system(size: 56, weight: .heavy, design: .monospaced))
+                    .foregroundStyle(Color.monoPrimary)
+            }
+
+            VStack(spacing: 12) {
+                Text("Look Away")
+                    .font(.system(size: 32, weight: .heavy))
+                    .foregroundStyle(Color.monoPrimary)
+
+                Text("Focus on something 20 feet away")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.monoSecondary)
+            }
+
+            Spacer()
+        }
+    }
 }

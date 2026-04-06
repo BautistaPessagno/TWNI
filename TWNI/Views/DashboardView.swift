@@ -44,8 +44,6 @@ struct DashboardView: View {
 
             ProtectionToggle(timerManager: timerManager)
 
-            ModeIndicator(mode: timerManager.timerMode)
-
             TodayStats(timerManager: timerManager)
 
             Spacer()
@@ -107,23 +105,36 @@ private struct StatusCard: View {
     var timerManager: TimerManager
 
     var body: some View {
-        VStack(spacing: 16) {
+        #if os(iOS)
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            statusContent(at: context.date)
+        }
+        #else
+        statusContent(at: Date())
+        #endif
+    }
+
+    private func statusContent(at date: Date) -> some View {
+        let screenTimeProgress = computeProgress(at: date)
+        let remaining = computeSecondsUntilBreak(at: date)
+
+        return VStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 48, weight: iconWeight))
                 .foregroundStyle(Color.monoPrimary.opacity(iconOpacity))
                 .symbolEffect(.pulse, isActive: timerManager.state == .breakPending)
 
-            Text(title)
+            Text(title(remaining: remaining))
                 .font(.title2.weight(.heavy))
                 .foregroundStyle(Color.monoPrimary)
 
-            Text(subtitle)
+            Text(subtitle(elapsed: Int(screenTimeProgress * Double(timerManager.intervalSeconds))))
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.monoSecondary)
                 .multilineTextAlignment(.center)
 
-            if timerManager.state == .active {
-                ProgressView(value: timerManager.progress)
+            if timerManager.state == .monitoring {
+                ProgressView(value: screenTimeProgress)
                     .tint(Color.monoProgressFill)
                     .padding(.horizontal, 32)
             }
@@ -134,52 +145,82 @@ private struct StatusCard: View {
         .animation(.easeInOut(duration: 0.3), value: timerManager.state)
     }
 
+    private func computeProgress(at date: Date) -> Double {
+        #if os(iOS)
+        guard timerManager.state == .monitoring,
+              let start = SharedDefaults.shared.cycleStartDate else { return 0 }
+        let elapsed = date.timeIntervalSince(start)
+        return Swift.min(elapsed / Double(timerManager.intervalSeconds), 1.0)
+        #else
+        return timerManager.progress
+        #endif
+    }
+
+    private func computeSecondsUntilBreak(at date: Date) -> Int {
+        #if os(iOS)
+        guard let start = SharedDefaults.shared.cycleStartDate else {
+            return timerManager.intervalSeconds
+        }
+        let elapsed = Int(date.timeIntervalSince(start))
+        return Swift.max(timerManager.intervalSeconds - elapsed, 0)
+        #else
+        return timerManager.secondsUntilBreak
+        #endif
+    }
+
     private var icon: String {
         switch timerManager.state {
-        case .active: "eye"
+        case .monitoring: "eye"
         case .breakPending: "eye.fill"
+        case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
     }
 
     private var iconWeight: Font.Weight {
         switch timerManager.state {
-        case .active: .regular
+        case .monitoring: .regular
         case .breakPending: .bold
+        case .breakActive: .bold
         case .disabled: .light
         }
     }
 
     private var iconOpacity: Double {
         switch timerManager.state {
-        case .active: 1.0
+        case .monitoring: 1.0
         case .breakPending: 1.0
+        case .breakActive: 1.0
         case .disabled: 0.4
         }
     }
 
-    private var title: String {
+    private func title(remaining: Int) -> String {
         switch timerManager.state {
-        case .active:
-            let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
+        case .monitoring:
+            let minutesLeft = (remaining + 59) / 60
             if minutesLeft > 0 {
                 return "~\(minutesLeft)m until break"
             }
             return "Break soon"
         case .breakPending:
             return "Claim your break"
+        case .breakActive:
+            return "Break in progress"
         case .disabled:
             return "Protection disabled"
         }
     }
 
-    private var subtitle: String {
+    private func subtitle(elapsed: Int) -> String {
         switch timerManager.state {
-        case .active:
-            let cycleMinutes = (timerManager.elapsedSeconds % timerManager.intervalSeconds) / 60
-            return "\(cycleMinutes)m of \(timerManager.effectiveIntervalMinutes)m screen time"
+        case .monitoring:
+            let cycleMinutes = elapsed / 60
+            return "\(cycleMinutes)m of 20m screen time"
         case .breakPending:
             return "Look away for 20 seconds, then claim"
+        case .breakActive:
+            return "\(timerManager.breakSecondsRemaining)s remaining"
         case .disabled:
             return "Enable to start protecting your eyes"
         }
@@ -221,26 +262,6 @@ private struct ProtectionToggle: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
         }
-    }
-}
-
-// MARK: - Mode Indicator
-
-private struct ModeIndicator: View {
-    let mode: TimerMode
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: mode == .auto ? "wand.and.stars" : "slider.horizontal.3")
-                .font(.caption.weight(.semibold))
-            Text(mode == .auto ? "Auto (20-20-20)" : "Manual")
-                .font(.caption.weight(.semibold))
-        }
-        .foregroundStyle(Color.monoTertiary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Color.monoElevated, in: Capsule())
-        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 0.5))
     }
 }
 
