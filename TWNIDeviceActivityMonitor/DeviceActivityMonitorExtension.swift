@@ -37,7 +37,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
     ) {
         shared.isBreakPending = true
         shared.blockReason = .eyeBreak
-        scheduleBreakNotification()
+        scheduleBreakNotification(uniqueSuffix: activity.rawValue)
 
         if shared.isBlockingEnabled {
             if activity.rawValue.hasPrefix(TWNIConstants.alwaysOnActivityName) {
@@ -73,7 +73,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
 
     // MARK: - Notifications
 
-    private func scheduleBreakNotification() {
+    private func scheduleBreakNotification(uniqueSuffix: String) {
         let content = UNMutableNotificationContent()
         content.title = "Time for a break!"
         content.body = "You've been looking at your screen. Open TWNI to start your eye break."
@@ -82,7 +82,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
         content.categoryIdentifier = "BREAK_REMINDER"
 
         let request = UNNotificationRequest(
-            identifier: "extension-break-reminder",
+            identifier: "extension-break-reminder.\(uniqueSuffix)",
             content: content,
             trigger: nil
         )
