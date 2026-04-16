@@ -10,7 +10,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
     private let breakStore = ManagedSettingsStore(named: .init("twni.break"))
 
     override func intervalDidStart(for activity: DeviceActivityName) {
-        if activity.rawValue == TWNIConstants.alwaysOnActivityName { return }
+        if activity.rawValue.hasPrefix(TWNIConstants.alwaysOnActivityName) { return }
 
         guard let scheduleID = UUID(uuidString: activity.rawValue),
               let schedule = shared.schedule(for: scheduleID),
@@ -22,7 +22,7 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
     }
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
-        if activity.rawValue == TWNIConstants.alwaysOnActivityName { return }
+        if activity.rawValue.hasPrefix(TWNIConstants.alwaysOnActivityName) { return }
 
         scheduleStore.clearAllSettings()
         if shared.blockReason == .scheduledBlock {
@@ -40,13 +40,21 @@ class TWNIDeviceActivityMonitor: DeviceActivityMonitor {
         scheduleBreakNotification()
 
         if shared.isBlockingEnabled {
-            if activity.rawValue == TWNIConstants.alwaysOnActivityName {
+            if activity.rawValue.hasPrefix(TWNIConstants.alwaysOnActivityName) {
                 applyShields(from: shared.breakSelectionData, to: breakStore)
             } else if let scheduleID = UUID(uuidString: activity.rawValue),
                       let schedule = shared.schedule(for: scheduleID) {
                 applyShields(from: schedule.selectionData, to: breakStore)
             }
         }
+
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName(TWNIConstants.darwinBreakPendingNotification as CFString),
+            nil,
+            nil,
+            true
+        )
     }
 
     // MARK: - Shields

@@ -19,5 +19,8 @@ enum TWNIConstants {
         static let breakCycleCount = "twni_breakCycleCount"
         static let cycleStartDate = "twni_cycleStartDate"
         static let breakCountdownActive = "twni_breakCountdownActive"
+        static let currentAlwaysOnActivity = "twni_currentAlwaysOnActivity"
     }
+
+    static let darwinBreakPendingNotification = "com.twni.break.pending"
 }

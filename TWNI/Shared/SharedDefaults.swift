@@ -73,7 +73,12 @@ final class SharedDefaults: @unchecked Sendable {
     }
 
     var isBlockingEnabled: Bool {
-        get { store.bool(forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) }
+        get {
+            if store.object(forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) == nil {
+                return true
+            }
+            return store.bool(forKey: TWNIConstants.DefaultsKey.appBlockingEnabled)
+        }
         set { store.set(newValue, forKey: TWNIConstants.DefaultsKey.appBlockingEnabled) }
     }
 

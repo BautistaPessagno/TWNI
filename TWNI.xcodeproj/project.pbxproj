@@ -43,6 +43,7 @@
 		AA000034 /* TWNIDeviceActivityMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000002 /* TWNIDeviceActivityMonitor.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA000035 /* TWNIShieldConfiguration.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000003 /* TWNIShieldConfiguration.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA000036 /* SchedulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* SchedulesView.swift */; };
+		AA000037 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034 /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +112,7 @@
 		AB000031 /* TWNIShieldConfiguration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNIShieldConfiguration.entitlements; sourceTree = "<group>"; };
 		AB000032 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB000033 /* SchedulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulesView.swift; sourceTree = "<group>"; };
+		AB000034 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC000002 /* TWNIDeviceActivityMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIDeviceActivityMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC000003 /* TWNIShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -197,6 +199,7 @@
 				AB000011 /* StatsView.swift */,
 				AB000012 /* SettingsView.swift */,
 				AB000033 /* SchedulesView.swift */,
+				AB000034 /* OnboardingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -440,6 +443,7 @@
 				AA000024 /* SharedDefaults.swift in Sources */,
 				AA000025 /* ScheduleModels.swift in Sources */,
 				AA000036 /* SchedulesView.swift in Sources */,
+				AA000037 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

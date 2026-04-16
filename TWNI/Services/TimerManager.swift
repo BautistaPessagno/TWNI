@@ -60,6 +60,9 @@ final class TimerManager {
     private var currentSession: ScreenSession?
     private var modelContext: ModelContext?
     nonisolated(unsafe) private var lifecycleObservers: [NSObjectProtocol] = []
+    #if os(iOS)
+    nonisolated(unsafe) private var darwinObserverRegistered = false
+    #endif
 
     // Skip cooldown
     private let maxSkipsPerDay = 3
@@ -91,6 +94,16 @@ final class TimerManager {
 
     deinit {
         lifecycleObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        #if os(iOS)
+        if darwinObserverRegistered {
+            CFNotificationCenterRemoveObserver(
+                CFNotificationCenterGetDarwinNotifyCenter(),
+                Unmanaged.passUnretained(self).toOpaque(),
+                CFNotificationName(TWNIConstants.darwinBreakPendingNotification as CFString),
+                nil
+            )
+        }
+        #endif
     }
 
     // MARK: - Setup
@@ -98,6 +111,9 @@ final class TimerManager {
     func configure(modelContext: ModelContext) {
         self.modelContext = modelContext
         resetSkipsIfNewDay()
+        #if os(iOS)
+        resetCycleCountIfNewDay()
+        #endif
         loadTodayStats()
         enable()
         setupAppLifecycleObservers()
@@ -195,6 +211,7 @@ final class TimerManager {
         skipsToday += 1
 
         #if os(iOS)
+        resetCycleCountIfNewDay()
         SharedDefaults.shared.breakCycleCount += 1
         SharedDefaults.shared.cycleStartDate = Date()
         screenTimeService?.registerAlwaysOnMonitor()
@@ -247,6 +264,7 @@ final class TimerManager {
         SharedDefaults.shared.isBreakActive = false
         SharedDefaults.shared.isBreakCountdownActive = false
         SharedDefaults.shared.breakEndDate = nil
+        resetCycleCountIfNewDay()
         SharedDefaults.shared.breakCycleCount += 1
         SharedDefaults.shared.cycleStartDate = Date()
         screenTimeService?.registerAlwaysOnMonitor()
@@ -264,8 +282,11 @@ final class TimerManager {
     private func triggerBreak() {
         state = .breakPending
         SharedDefaults.shared.blockReason = .eyeBreak
-        appBlockingService?.blockApps()
-        notificationService.scheduleBreakNotification()
+    }
+
+    func handleExtensionBreakTrigger() {
+        guard SharedDefaults.shared.isBreakPending, state == .monitoring else { return }
+        triggerBreak()
     }
     #endif
 
@@ -440,6 +461,8 @@ final class TimerManager {
         }
 
         lifecycleObservers = [resignObserver, activeObserver]
+
+        registerDarwinBreakObserver()
         #elseif os(macOS)
         let resignObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didResignActiveNotification,
@@ -465,6 +488,40 @@ final class TimerManager {
         #endif
     }
 
+    // MARK: - iOS Darwin notification bridge
+
+    #if os(iOS)
+    private func registerDarwinBreakObserver() {
+        guard !darwinObserverRegistered else { return }
+        let observer = Unmanaged.passUnretained(self).toOpaque()
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            observer,
+            { _, observer, _, _, _ in
+                guard let observer else { return }
+                let manager = Unmanaged<TimerManager>.fromOpaque(observer).takeUnretainedValue()
+                Task { @MainActor in manager.handleExtensionBreakTrigger() }
+            },
+            TWNIConstants.darwinBreakPendingNotification as CFString,
+            nil,
+            .deliverImmediately
+        )
+        darwinObserverRegistered = true
+    }
+
+    private func resetCycleCountIfNewDay() {
+        let now = Date()
+        guard let start = SharedDefaults.shared.cycleStartDate else {
+            SharedDefaults.shared.cycleStartDate = now
+            return
+        }
+        if !Calendar.current.isDateInToday(start) {
+            SharedDefaults.shared.breakCycleCount = 0
+            SharedDefaults.shared.cycleStartDate = now
+        }
+    }
+    #endif
+
     // MARK: - iOS Lifecycle
 
     #if os(iOS)
@@ -476,6 +533,7 @@ final class TimerManager {
 
     private func handleiOSForeground() {
         notificationService.cancelPendingNotifications()
+        resetCycleCountIfNewDay()
 
         if state == .breakActive {
             if let endDate = SharedDefaults.shared.breakEndDate {

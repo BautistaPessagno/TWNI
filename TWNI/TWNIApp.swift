@@ -29,28 +29,41 @@ struct TWNIApp: App {
 
     var body: some Scene {
         WindowGroup {
+            #if os(iOS)
+            ContentView(
+                timerManager: timerManager,
+                appBlockingService: appBlockingService,
+                screenTimeService: screenTimeService
+            )
+            .modelContainer(sharedModelContainer)
+            .task {
+                timerManager.appBlockingService = appBlockingService
+                timerManager.screenTimeService = screenTimeService
+
+                appBlockingService.refreshAuthorization()
+                await screenTimeService.refreshAuthorization()
+
+                if screenTimeService.isAuthorized {
+                    screenTimeService.syncAllSchedules()
+                }
+
+                timerManager.configure(modelContext: sharedModelContainer.mainContext)
+
+                await timerManager.notificationService.requestAuthorization()
+                timerManager.notificationService.registerActions()
+            }
+            #else
             ContentView(timerManager: timerManager)
                 .modelContainer(sharedModelContainer)
                 .task {
-                    #if os(iOS)
-                    timerManager.appBlockingService = appBlockingService
-                    timerManager.screenTimeService = screenTimeService
-
-                    appBlockingService.refreshAuthorization()
-                    await screenTimeService.refreshAuthorization()
-
-                    screenTimeService.syncAllSchedules()
-                    #endif
-
                     timerManager.configure(modelContext: sharedModelContainer.mainContext)
 
                     await timerManager.notificationService.requestAuthorization()
                     timerManager.notificationService.registerActions()
 
-                    #if os(macOS)
                     activityDetector.start(timerManager: timerManager)
-                    #endif
                 }
+            #endif
         }
         #if os(macOS)
         .windowResizability(.contentSize)

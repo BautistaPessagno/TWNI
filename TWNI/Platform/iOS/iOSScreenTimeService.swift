@@ -42,7 +42,13 @@ final class iOSScreenTimeService {
         #if canImport(DeviceActivity)
         guard isAuthorized else { return }
 
-        let activityName = DeviceActivityName(TWNIConstants.alwaysOnActivityName)
+        if let previous = shared.store.string(forKey: TWNIConstants.DefaultsKey.currentAlwaysOnActivity) {
+            center.stopMonitoring([DeviceActivityName(previous)])
+        }
+
+        let cycleID = Int(Date().timeIntervalSince1970)
+        let activityRaw = "\(TWNIConstants.alwaysOnActivityName).\(cycleID)"
+        let activityName = DeviceActivityName(activityRaw)
 
         let schedule = DeviceActivitySchedule(
             intervalStart: DateComponents(hour: 0, minute: 0),
@@ -50,19 +56,13 @@ final class iOSScreenTimeService {
             repeats: true
         )
 
-        let cycleCount = shared.breakCycleCount
-        let thresholdMinutes = (cycleCount + 1) * 20
-        let usageThreshold = DateComponents(minute: thresholdMinutes)
-
-        let eventName = DeviceActivityEvent.Name(TWNIConstants.alwaysOnActivityName + ".break")
+        let eventName = DeviceActivityEvent.Name(activityRaw + ".break")
         let event = DeviceActivityEvent(
             applications: [],
             categories: [],
-            threshold: usageThreshold,
-            includesPastActivity: true
+            threshold: DateComponents(minute: 20),
+            includesPastActivity: false
         )
-
-        center.stopMonitoring([activityName])
 
         do {
             try center.startMonitoring(
@@ -70,6 +70,7 @@ final class iOSScreenTimeService {
                 during: schedule,
                 events: [eventName: event]
             )
+            shared.store.set(activityRaw, forKey: TWNIConstants.DefaultsKey.currentAlwaysOnActivity)
         } catch {
             print("Failed to register always-on monitor: \(error)")
         }
@@ -78,8 +79,6 @@ final class iOSScreenTimeService {
 
     func restartAlwaysOnMonitor() {
         #if canImport(DeviceActivity)
-        let activityName = DeviceActivityName(TWNIConstants.alwaysOnActivityName)
-        center.stopMonitoring([activityName])
         registerAlwaysOnMonitor()
         #endif
     }
@@ -104,15 +103,12 @@ final class iOSScreenTimeService {
             repeats: true
         )
 
-        let cycleCount = shared.breakCycleCount
-        let usageThreshold = DateComponents(minute: (cycleCount + 1) * 20)
-
         let eventName = DeviceActivityEvent.Name(schedule.id.uuidString + ".break")
         let event = DeviceActivityEvent(
             applications: [],
             categories: [],
-            threshold: usageThreshold,
-            includesPastActivity: true
+            threshold: DateComponents(minute: 20),
+            includesPastActivity: false
         )
 
         do {
