@@ -33,13 +33,31 @@ struct MenuBarView: View {
                 }
             }
 
-            if timerManager.state == .breakActive {
-                Button("Skip Break") {
-                    timerManager.skipBreak()
+            if timerManager.state == .breakPending {
+                Button("Claim Break") {
+                    timerManager.claimBreak()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
                 .tint(Color.monoAccent)
                 .frame(maxWidth: .infinity)
+
+                if timerManager.canSkip {
+                    Button("Skip (\(timerManager.remainingSkips) left)") {
+                        timerManager.skipBreak()
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color.monoAccent)
+                    .frame(maxWidth: .infinity)
+                }
+            }
+
+            if timerManager.state == .breakActive {
+                VStack(spacing: 4) {
+                    Text("Look away — \(timerManager.breakSecondsRemaining)s")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.monoPrimary)
+                        .monospacedDigit()
+                }
             }
 
             Divider()
@@ -103,13 +121,13 @@ private struct StateIndicator: View {
                 .frame(width: 8, height: 8)
                 .scaleEffect(pulse ? 1.3 : 1.0)
                 .animation(
-                    state == .breakActive
+                    state == .breakPending
                         ? .easeInOut(duration: 1).repeatForever(autoreverses: true)
                         : .default,
                     value: pulse
                 )
-                .onAppear { pulse = state == .breakActive }
-                .onChange(of: state) { pulse = state == .breakActive }
+                .onAppear { pulse = state == .breakPending }
+                .onChange(of: state) { pulse = state == .breakPending }
 
             Text(label)
                 .font(.caption.weight(.semibold))
@@ -119,8 +137,9 @@ private struct StateIndicator: View {
 
     private var label: String {
         switch state {
-        case .active: "Active"
-        case .breakActive: "Break"
+        case .monitoring: "Active"
+        case .breakPending: "Break Pending"
+        case .breakActive: "Break Active"
         case .disabled: "Disabled"
         }
     }
@@ -133,23 +152,26 @@ private struct MenuBarStatusDisplay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            if timerManager.state == .breakActive {
-                Text("Look away...")
+            if timerManager.state == .breakPending {
+                Text("Time for an eye break")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.monoPrimary)
+                Text("Tap Claim Break to rest your eyes")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.monoSecondary)
+            } else if timerManager.state == .breakActive {
+                Text("Look away")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.monoPrimary)
                 Text("\(timerManager.breakSecondsRemaining)s")
                     .font(.system(size: 36, weight: .light, design: .monospaced))
                     .foregroundStyle(Color.monoPrimary)
-
-                ProgressView(value: timerManager.breakProgress)
-                    .tint(Color.monoProgressFill)
-            } else if timerManager.state == .active {
-                let minutes = timerManager.secondsUntilBreak / 60
-                let seconds = timerManager.secondsUntilBreak % 60
+            } else if timerManager.state == .monitoring {
+                let minutesLeft = (timerManager.secondsUntilBreak + 59) / 60
                 Text("Next break in")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.monoSecondary)
-                Text(String(format: "%02d:%02d", minutes, seconds))
+                Text("~\(minutesLeft)m")
                     .font(.system(size: 36, weight: .light, design: .monospaced))
                     .foregroundStyle(Color.monoPrimary)
 

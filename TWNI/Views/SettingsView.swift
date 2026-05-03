@@ -6,8 +6,6 @@ import ServiceManagement
 struct SettingsView: View {
     var timerManager: TimerManager
 
-    @AppStorage("intervalMinutes") private var intervalMinutes: Int = 20
-    @AppStorage("breakDurationSeconds") private var breakDurationSeconds: Int = 20
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
 
     #if os(macOS)
@@ -16,42 +14,6 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Mode") {
-                Picker("Protection Mode", selection: Binding(
-                    get: { timerManager.timerMode },
-                    set: { timerManager.timerMode = $0 }
-                )) {
-                    Text("Auto (20-20-20)").tag(TimerMode.auto)
-                    Text("Manual").tag(TimerMode.manual)
-                }
-                .pickerStyle(.segmented)
-
-                if timerManager.timerMode == .auto {
-                    Text("Every 20 minutes, look at something 20 feet away for 20 seconds.")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.monoTertiary)
-                } else {
-                    Stepper(
-                        "Interval: \(intervalMinutes) min",
-                        value: $intervalMinutes,
-                        in: 1...120
-                    )
-                    .onChange(of: intervalMinutes) {
-                        timerManager.intervalMinutes = intervalMinutes
-                    }
-
-                    Stepper(
-                        "Break duration: \(breakDurationSeconds) sec",
-                        value: $breakDurationSeconds,
-                        in: 5...120,
-                        step: 5
-                    )
-                    .onChange(of: breakDurationSeconds) {
-                        timerManager.breakDurationSeconds = breakDurationSeconds
-                    }
-                }
-            }
-
             Section("Behavior") {
                 Toggle("Sound effects", isOn: $soundEnabled)
                     .onChange(of: soundEnabled) {
@@ -130,7 +92,7 @@ private struct AppBlockingSection: View {
                     #if canImport(FamilyControls)
                     if blockingService.isBlockingEnabled {
                         NavigationLink {
-                            AppSelectionView(blockingService: blockingService)
+                            BreakAppSelectionView(blockingService: blockingService)
                         } label: {
                             LabeledContent("Apps to block", value: appsSelectedLabel)
                         }
@@ -167,12 +129,12 @@ private struct AppBlockingSection: View {
 }
 #endif
 
-// MARK: - App Selection View (iOS)
+// MARK: - Break App Selection (iOS)
 
 #if os(iOS) && canImport(FamilyControls)
 import FamilyControls
 
-private struct AppSelectionView: View {
+private struct BreakAppSelectionView: View {
     var blockingService: AppBlockingService
 
     var body: some View {
@@ -180,7 +142,7 @@ private struct AppSelectionView: View {
             get: { blockingService.activitySelection },
             set: { blockingService.activitySelection = $0 }
         ))
-        .navigationTitle("Select Apps")
+        .navigationTitle("Break App Selection")
     }
 }
 #endif

@@ -29,7 +29,64 @@
 		AA000020 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021 /* Color+Extensions.swift */; };
 		AA000021 /* MotionLinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022 /* MotionLinesView.swift */; };
 		AA000022 /* MonochromeCardModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023 /* MonochromeCardModifier.swift */; };
+		AA000023 /* SharedConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* SharedConstants.swift */; };
+		AA000024 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025 /* SharedDefaults.swift */; };
+		AA000025 /* ScheduleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ScheduleModels.swift */; };
+		AA000026 /* DeviceActivityMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000027 /* DeviceActivityMonitorExtension.swift */; };
+		AA000027 /* SharedConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* SharedConstants.swift */; };
+		AA000028 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025 /* SharedDefaults.swift */; };
+		AA000029 /* ScheduleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ScheduleModels.swift */; };
+		AA000030 /* ShieldConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000030 /* ShieldConfigurationExtension.swift */; };
+		AA000031 /* SharedConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* SharedConstants.swift */; };
+		AA000032 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025 /* SharedDefaults.swift */; };
+		AA000033 /* ScheduleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ScheduleModels.swift */; };
+		AA000034 /* TWNIDeviceActivityMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000002 /* TWNIDeviceActivityMonitor.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA000035 /* TWNIShieldConfiguration.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000003 /* TWNIShieldConfiguration.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA000036 /* SchedulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* SchedulesView.swift */; };
+		AA000037 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034 /* OnboardingView.swift */; };
+		AA000038 /* ShieldActionExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000035 /* ShieldActionExtension.swift */; };
+		AA000039 /* TWNIShieldAction.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC000004 /* TWNIShieldAction.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B3000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B0000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AF000004;
+			remoteInfo = TWNIDeviceActivityMonitor;
+		};
+		B3000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B0000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AF000007;
+			remoteInfo = TWNIShieldConfiguration;
+		};
+		B3000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B0000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AF000011;
+			remoteInfo = TWNIShieldAction;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AF000010 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA000034 /* TWNIDeviceActivityMonitor.appex in Embed App Extensions */,
+				AA000035 /* TWNIShieldConfiguration.appex in Embed App Extensions */,
+				AA000039 /* TWNIShieldAction.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AB000001 /* TWNIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TWNIApp.swift; sourceTree = "<group>"; };
@@ -55,11 +112,49 @@
 		AB000021 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		AB000022 /* MotionLinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionLinesView.swift; sourceTree = "<group>"; };
 		AB000023 /* MonochromeCardModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonochromeCardModifier.swift; sourceTree = "<group>"; };
+		AB000024 /* SharedConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedConstants.swift; sourceTree = "<group>"; };
+		AB000025 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
+		AB000026 /* ScheduleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleModels.swift; sourceTree = "<group>"; };
+		AB000027 /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
+		AB000028 /* TWNIDeviceActivityMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNIDeviceActivityMonitor.entitlements; sourceTree = "<group>"; };
+		AB000029 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB000030 /* ShieldConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldConfigurationExtension.swift; sourceTree = "<group>"; };
+		AB000031 /* TWNIShieldConfiguration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNIShieldConfiguration.entitlements; sourceTree = "<group>"; };
+		AB000032 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB000033 /* SchedulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulesView.swift; sourceTree = "<group>"; };
+		AB000034 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AB000035 /* ShieldActionExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldActionExtension.swift; sourceTree = "<group>"; };
+		AB000036 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB000037 /* TWNIShieldAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNIShieldAction.entitlements; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC000002 /* TWNIDeviceActivityMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIDeviceActivityMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC000003 /* TWNIShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC000004 /* TWNIShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TWNIShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AD000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -73,6 +168,9 @@
 			isa = PBXGroup;
 			children = (
 				AE000002 /* TWNI */,
+				AE000013 /* TWNIDeviceActivityMonitor */,
+				AE000014 /* TWNIShieldConfiguration */,
+				AE000015 /* TWNIShieldAction */,
 				AE000010 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +186,7 @@
 				AE000011 /* Components */,
 				AE000006 /* Platform */,
 				AE000009 /* Extensions */,
+				AE000012 /* Shared */,
 				AB000018 /* Assets.xcassets */,
 				AB000019 /* TWNI.entitlements */,
 			);
@@ -121,6 +220,8 @@
 				AB000010 /* BreakOverlayView.swift */,
 				AB000011 /* StatsView.swift */,
 				AB000012 /* SettingsView.swift */,
+				AB000033 /* SchedulesView.swift */,
+				AB000034 /* OnboardingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -166,6 +267,9 @@
 			isa = PBXGroup;
 			children = (
 				AC000001 /* TWNI.app */,
+				AC000002 /* TWNIDeviceActivityMonitor.appex */,
+				AC000003 /* TWNIShieldConfiguration.appex */,
+				AC000004 /* TWNIShieldAction.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,6 +283,46 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		AE000012 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				AB000024 /* SharedConstants.swift */,
+				AB000025 /* SharedDefaults.swift */,
+				AB000026 /* ScheduleModels.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		AE000013 /* TWNIDeviceActivityMonitor */ = {
+			isa = PBXGroup;
+			children = (
+				AB000027 /* DeviceActivityMonitorExtension.swift */,
+				AB000029 /* Info.plist */,
+				AB000028 /* TWNIDeviceActivityMonitor.entitlements */,
+			);
+			path = TWNIDeviceActivityMonitor;
+			sourceTree = "<group>";
+		};
+		AE000014 /* TWNIShieldConfiguration */ = {
+			isa = PBXGroup;
+			children = (
+				AB000030 /* ShieldConfigurationExtension.swift */,
+				AB000032 /* Info.plist */,
+				AB000031 /* TWNIShieldConfiguration.entitlements */,
+			);
+			path = TWNIShieldConfiguration;
+			sourceTree = "<group>";
+		};
+		AE000015 /* TWNIShieldAction */ = {
+			isa = PBXGroup;
+			children = (
+				AB000035 /* ShieldActionExtension.swift */,
+				AB000036 /* Info.plist */,
+				AB000037 /* TWNIShieldAction.entitlements */,
+			);
+			path = TWNIShieldAction;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -189,15 +333,70 @@
 				AF000002 /* Sources */,
 				AD000001 /* Frameworks */,
 				AF000003 /* Resources */,
+				AF000010 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B4000001 /* PBXTargetDependency */,
+				B4000002 /* PBXTargetDependency */,
+				B4000003 /* PBXTargetDependency */,
 			);
 			name = TWNI;
 			productName = TWNI;
 			productReference = AC000001 /* TWNI.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AF000004 /* TWNIDeviceActivityMonitor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1000004 /* Build configuration list for PBXNativeTarget "TWNIDeviceActivityMonitor" */;
+			buildPhases = (
+				AF000005 /* Sources */,
+				AD000002 /* Frameworks */,
+				AF000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TWNIDeviceActivityMonitor;
+			productName = TWNIDeviceActivityMonitor;
+			productReference = AC000002 /* TWNIDeviceActivityMonitor.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		AF000007 /* TWNIShieldConfiguration */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1000005 /* Build configuration list for PBXNativeTarget "TWNIShieldConfiguration" */;
+			buildPhases = (
+				AF000008 /* Sources */,
+				AD000003 /* Frameworks */,
+				AF000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TWNIShieldConfiguration;
+			productName = TWNIShieldConfiguration;
+			productReference = AC000003 /* TWNIShieldConfiguration.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		AF000011 /* TWNIShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1000006 /* Build configuration list for PBXNativeTarget "TWNIShieldAction" */;
+			buildPhases = (
+				AF000012 /* Sources */,
+				AD000004 /* Frameworks */,
+				AF000013 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TWNIShieldAction;
+			productName = TWNIShieldAction;
+			productReference = AC000004 /* TWNIShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -210,6 +409,15 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					AF000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AF000004 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AF000007 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AF000011 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -228,6 +436,9 @@
 			projectRoot = "";
 			targets = (
 				AF000001 /* TWNI */,
+				AF000004 /* TWNIDeviceActivityMonitor */,
+				AF000007 /* TWNIShieldConfiguration */,
+				AF000011 /* TWNIShieldAction */,
 			);
 		};
 /* End PBXProject section */
@@ -238,6 +449,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000018 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,10 +501,63 @@
 				AA000020 /* Color+Extensions.swift in Sources */,
 				AA000021 /* MotionLinesView.swift in Sources */,
 				AA000022 /* MonochromeCardModifier.swift in Sources */,
+				AA000023 /* SharedConstants.swift in Sources */,
+				AA000024 /* SharedDefaults.swift in Sources */,
+				AA000025 /* ScheduleModels.swift in Sources */,
+				AA000036 /* SchedulesView.swift in Sources */,
+				AA000037 /* OnboardingView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000026 /* DeviceActivityMonitorExtension.swift in Sources */,
+				AA000027 /* SharedConstants.swift in Sources */,
+				AA000028 /* SharedDefaults.swift in Sources */,
+				AA000029 /* ScheduleModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000030 /* ShieldConfigurationExtension.swift in Sources */,
+				AA000031 /* SharedConstants.swift in Sources */,
+				AA000032 /* SharedDefaults.swift in Sources */,
+				AA000033 /* ScheduleModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000038 /* ShieldActionExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B4000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AF000004 /* TWNIDeviceActivityMonitor */;
+			targetProxy = B3000001 /* PBXContainerItemProxy */;
+		};
+		B4000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AF000007 /* TWNIShieldConfiguration */;
+			targetProxy = B3000002 /* PBXContainerItemProxy */;
+		};
+		B4000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AF000011 /* TWNIShieldAction */;
+			targetProxy = B3000003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B2000001 /* Debug */ = {
@@ -425,7 +710,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -468,12 +753,192 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B2000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIDeviceActivityMonitor/TWNIDeviceActivityMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIDeviceActivityMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIDeviceActivityMonitor;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.device-activity-monitor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B2000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIDeviceActivityMonitor/TWNIDeviceActivityMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIDeviceActivityMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIDeviceActivityMonitor;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.device-activity-monitor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B2000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIShieldConfiguration/TWNIShieldConfiguration.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIShieldConfiguration/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIShieldConfiguration;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-configuration";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B2000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIShieldConfiguration/TWNIShieldConfiguration.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIShieldConfiguration/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIShieldConfiguration;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-configuration";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B2000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIShieldAction/TWNIShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIShieldAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-action";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B2000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TWNIShieldAction/TWNIShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CX6Q34K8F6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TWNIShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TWNIShieldAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.twni.app.shield-action";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
@@ -498,6 +963,33 @@
 			buildConfigurations = (
 				B2000001 /* Debug */,
 				B2000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1000004 /* Build configuration list for PBXNativeTarget "TWNIDeviceActivityMonitor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2000005 /* Debug */,
+				B2000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1000005 /* Build configuration list for PBXNativeTarget "TWNIShieldConfiguration" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2000007 /* Debug */,
+				B2000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1000006 /* Build configuration list for PBXNativeTarget "TWNIShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2000009 /* Debug */,
+				B2000010 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "swiftui-expert": {
+      "source": "swiftyjourney/swiftui-expert-skill",
+      "sourceType": "github",
+      "computedHash": "e70645031c65ca7f499beb0bcc6b245ea567dabb86fa6b70875a354465ce9173"
+    }
+  }
+}

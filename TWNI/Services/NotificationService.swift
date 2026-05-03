@@ -12,6 +12,11 @@ final class NotificationService: @unchecked Sendable {
         }
     }
 
+    func checkAuthorizationStatus() async -> Bool {
+        let settings = await center.notificationSettings()
+        return settings.authorizationStatus == .authorized
+    }
+
     func scheduleBreakNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Time for a break!"
@@ -89,15 +94,9 @@ final class NotificationService: @unchecked Sendable {
             options: .foreground
         )
 
-        let skipAction = UNNotificationAction(
-            identifier: "SKIP_BREAK",
-            title: "Skip",
-            options: .destructive
-        )
-
         let category = UNNotificationCategory(
             identifier: "BREAK_REMINDER",
-            actions: [startAction, skipAction],
+            actions: [startAction],
             intentIdentifiers: []
         )
 

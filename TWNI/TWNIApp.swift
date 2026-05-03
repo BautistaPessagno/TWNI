@@ -11,6 +11,7 @@ struct TWNIApp: App {
 
     #if os(iOS)
     @State private var appBlockingService = AppBlockingService()
+    @State private var screenTimeService = iOSScreenTimeService()
     #endif
 
     var sharedModelContainer: ModelContainer = {
@@ -28,22 +29,41 @@ struct TWNIApp: App {
 
     var body: some Scene {
         WindowGroup {
+            #if os(iOS)
+            ContentView(
+                timerManager: timerManager,
+                appBlockingService: appBlockingService,
+                screenTimeService: screenTimeService
+            )
+            .modelContainer(sharedModelContainer)
+            .task {
+                timerManager.appBlockingService = appBlockingService
+                timerManager.screenTimeService = screenTimeService
+
+                appBlockingService.refreshAuthorization()
+                await screenTimeService.refreshAuthorization()
+
+                if screenTimeService.isAuthorized {
+                    screenTimeService.syncAllSchedules()
+                }
+
+                timerManager.configure(modelContext: sharedModelContainer.mainContext)
+
+                await timerManager.notificationService.requestAuthorization()
+                timerManager.notificationService.registerActions()
+            }
+            #else
             ContentView(timerManager: timerManager)
                 .modelContainer(sharedModelContainer)
                 .task {
-                    #if os(iOS)
-                    timerManager.appBlockingService = appBlockingService
-                    #endif
-
                     timerManager.configure(modelContext: sharedModelContainer.mainContext)
 
                     await timerManager.notificationService.requestAuthorization()
                     timerManager.notificationService.registerActions()
 
-                    #if os(macOS)
                     activityDetector.start(timerManager: timerManager)
-                    #endif
                 }
+            #endif
         }
         #if os(macOS)
         .windowResizability(.contentSize)
@@ -74,8 +94,11 @@ private struct MenuBarLabel: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-            if timerManager.state == .active {
+            if timerManager.state == .monitoring {
                 Text(countdownText)
+                    .monospacedDigit()
+            } else if timerManager.state == .breakPending {
+                Text("!")
                     .monospacedDigit()
             } else if timerManager.state == .breakActive {
                 Text("\(timerManager.breakSecondsRemaining)s")
@@ -86,7 +109,8 @@ private struct MenuBarLabel: View {
 
     private var icon: String {
         switch timerManager.state {
-        case .active: "eye"
+        case .monitoring: "eye"
+        case .breakPending: "eye.fill"
         case .breakActive: "eye.fill"
         case .disabled: "eye.slash"
         }
