@@ -104,7 +104,7 @@ private struct ScoreChart: View {
                             y: .value("Score", score)
                         )
                         .foregroundStyle(Color.monoPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .cornerRadius(4)
                     }
                 }
                 RuleMark(y: .value("Goal", timerManager.dailyGoal))
@@ -163,9 +163,9 @@ private struct ScreenTimeChart: View {
 
     private var subtitle: String {
         #if os(macOS)
-        "Time you were actively using this Mac"
+        return "Time you were actively using this Mac"
         #else
-        "Time inside screen sessions"
+        return "Time inside screen sessions"
         #endif
     }
 
@@ -177,7 +177,7 @@ private struct ScreenTimeChart: View {
                     y: .value("Minutes", Int(day.screenSeconds / 60))
                 )
                 .foregroundStyle(Color.monoSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .cornerRadius(4)
             }
             .chartYAxisLabel("Minutes")
             .chartXScale(domain: days.map { weekdayLabel($0.day) })

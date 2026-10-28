@@ -514,6 +514,8 @@ final class TimerManager {
 
     private func syncOverlay() {
         #if os(macOS)
+        // Wait for the first tick: during launch (App.init) it's too early for windows.
+        guard ticker != nil else { return }
         overlay?.setVisible(isShowingBreak)
         #endif
     }
@@ -634,9 +636,9 @@ final class TimerManager {
 
     private static var deviceName: String {
         #if os(macOS)
-        "mac"
+        return "mac"
         #else
-        "ios"
+        return "ios"
         #endif
     }
 

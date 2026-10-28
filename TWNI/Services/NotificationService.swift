@@ -57,7 +57,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
         switch settings.authorizationStatus {
         case .notDetermined: return .notAsked
         case .denied: return .denied
-        case .authorized, .provisional, .ephemeral: return .allowed
+        case .authorized, .provisional: return .allowed
+        #if os(iOS)
+        case .ephemeral: return .allowed  // App Clips only; unavailable on macOS
+        #endif
         @unknown default: return .unknown
         }
     }

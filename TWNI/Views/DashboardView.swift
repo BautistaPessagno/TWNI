@@ -104,9 +104,9 @@ private struct ScoreCard: View {
 
     private var screenIcon: String {
         #if os(macOS)
-        "laptopcomputer"
+        return "laptopcomputer"
         #else
-        "iphone"
+        return "iphone"
         #endif
     }
 
