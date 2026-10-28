@@ -19,10 +19,13 @@ The workflow watches changes to `main`. Its iOS distribution preparation is
 The separate external-testing workflow is not used for this path.
 
 The project uses team `CX6Q34K8F6` and bundle ID `com.twni.app`. Version 2.0 starts
-with local build number 45; Xcode Cloud assigns its own increasing build numbers.
+with local build number 46; Xcode Cloud assigns its own increasing build numbers.
 The shared scheme is committed under `TWNI.xcodeproj/xcshareddata/xcschemes/`.
 iOS uses `TWNI-iOS.entitlements`; macOS keeps the App Sandbox entitlement.
 The current app uses no non-exempt encryption, declared in the generated Info.plist.
+The bundled privacy manifest declares app-local UserDefaults usage with reason
+`CA92.1`. The PNG app icon is opaque; the post-clone script checks for an alpha
+channel before spending time on tests and archives.
 
 ## Check a delivery
 

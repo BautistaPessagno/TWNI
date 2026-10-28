@@ -32,6 +32,7 @@
 		AA000032 /* ScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* ScoreRing.swift */; };
 		AA000033 /* HoldToSkipButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034 /* HoldToSkipButton.swift */; };
 		AA000034 /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000035 /* NotificationAction.swift */; };
+		AA000035 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AB000036 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +62,7 @@
 		AB000033 /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
 		AB000034 /* HoldToSkipButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToSkipButton.swift; sourceTree = "<group>"; };
 		AB000035 /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
+		AB000036 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -96,6 +98,7 @@
 				AE000006 /* Platform */,
 				AE000009 /* Extensions */,
 				AB000018 /* Assets.xcassets */,
+				AB000036 /* PrivacyInfo.xcprivacy */,
 				AB000019 /* TWNI.entitlements */,
 			);
 			path = TWNI;
@@ -247,6 +250,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000018 /* Assets.xcassets in Resources */,
+				AA000035 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -416,7 +420,7 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -462,7 +466,7 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
