@@ -75,3 +75,7 @@ The extensions are embedded only in the iOS build (`platformFilter = ios`).
 Unverified until tested on a device: whether "All apps" also shields TWNI itself
 (if so, the shield's own Start/Done flow still unlocks), and whether the shield
 unlocks immediately after Done or needs the app reopened.
+
+Also to confirm on a device: that an event with no apps listed really counts all
+device use (if it never fires, count with every category picked in the picker
+instead), and that the shield text updates after each tap.

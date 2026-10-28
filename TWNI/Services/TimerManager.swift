@@ -497,8 +497,12 @@ final class TimerManager {
             case .cycleEnded(let record):
                 #if os(iOS)
                 if automaticBreakInProgress {
+                    // Anything after this (catch-up cycles, a new break) belonged
+                    // to the engine's own timer, which automatic mode doesn't use.
                     finishAutomaticBreak(record, at: date, quiet: quiet)
-                    continue
+                    saveSnapshot()
+                    syncOverlay()
+                    return
                 }
                 #endif
                 store(record)
@@ -628,6 +632,10 @@ final class TimerManager {
         pausedUntil = defaults.object(forKey: Keys.pausedUntil) as? Date
         sessionEndsAt = defaults.object(forKey: Keys.sessionEndsAt) as? Date
         applyEngineSettings()
+        #if os(iOS)
+        // A guided break for a Screen Time lock that was running when iOS closed the app.
+        automaticBreakInProgress = screenTime.isShieldActive && engine.isResting
+        #endif
 
         // Catch up on the time the app wasn't running, without celebrating it.
         let date = Date()
@@ -773,6 +781,12 @@ final class TimerManager {
     /// The in-app guided break for a Screen Time lock ended: unlock the apps.
     private func finishAutomaticBreak(_ record: CycleRecord, at date: Date, quiet: Bool) {
         automaticBreakInProgress = false
+        let unlocks = record.outcome == .completed || (record.outcome == .skipped && canSkip)
+        guard unlocks else {
+            // Not a valid way out of the lock: the next tick starts a new break.
+            _ = engine.stop(at: date)
+            return
+        }
         let outcome: CycleOutcome = record.outcome == .completed ? .completed : .skipped
         screenTime.finishBreak(outcome: outcome, restedSeconds: record.restedSeconds)
         // The cycle is logged by finishBreak and imported on the next tick.

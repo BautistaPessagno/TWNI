@@ -123,8 +123,6 @@ enum ScreenTimeShared {
         center.stopMonitoring([activity])
         guard mode != .off else { return }
 
-        generation += 1
-        if resetStart || armedAt == nil { armedAt = now }
 
         // A repeating day-long window; the threshold counts from the moment we
         // start monitoring (includesPastActivity: false), and from midnight
@@ -156,7 +154,15 @@ enum ScreenTimeShared {
                 includesPastActivity: false
             )
         }
-        try center.startMonitoring(activity, during: schedule, events: [eventName(for: generation): event])
+        let next = generation + 1
+        do {
+            try center.startMonitoring(activity, during: schedule, events: [eventName(for: next): event])
+        } catch {
+            armedAt = nil
+            throw error
+        }
+        generation = next
+        if resetStart || armedAt == nil { armedAt = now }
     }
 
     static func stopCounting() {
@@ -179,6 +185,7 @@ enum ScreenTimeShared {
             settings.shield.applications = picked.applicationTokens.isEmpty ? nil : picked.applicationTokens
             settings.shield.applicationCategories = picked.categoryTokens.isEmpty ? nil : .specific(picked.categoryTokens)
             settings.shield.webDomains = picked.webDomainTokens.isEmpty ? nil : picked.webDomainTokens
+            settings.shield.webDomainCategories = picked.categoryTokens.isEmpty ? nil : .specific(picked.categoryTokens)
         case .off:
             return
         }
@@ -190,6 +197,10 @@ enum ScreenTimeShared {
         ManagedSettingsStore(named: store).clearAllSettings()
         shieldedAt = nil
         restStartedAt = nil
+        let center = UNUserNotificationCenter.current()
+        let ids = ["screen-time-due", "screen-time-open", "screen-time-rest-done"]
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     /// Ends the current break: logs it, unlocks the apps and starts counting again.
@@ -218,7 +229,11 @@ enum ScreenTimeShared {
     /// Returns and removes the cycles waiting to be imported by the app.
     static func drainLog() -> [LoggedCycle] {
         let log = readLog()
-        if !log.isEmpty { defaults.removeObject(forKey: Key.log) }
+        guard !log.isEmpty else { return [] }
+        // Keep anything an extension appended after the read above.
+        let taken = Set(log.map(\.id))
+        let remaining = readLog().filter { !taken.contains($0.id) }
+        defaults.set(try? JSONEncoder().encode(remaining), forKey: Key.log)
         return log
     }
 

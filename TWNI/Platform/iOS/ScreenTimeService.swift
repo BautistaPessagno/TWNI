@@ -1,6 +1,8 @@
 #if os(iOS)
+import DeviceActivity
 import FamilyControls
 import Foundation
+import Observation
 
 /// The app side of automatic eye breaks: Screen Time access, which apps count,
 /// and the bridge to the extensions' shared state.
@@ -11,6 +13,7 @@ final class ScreenTimeService {
     private(set) var selection: FamilyActivitySelection = ScreenTimeShared.selection
     private(set) var isShieldActive = ScreenTimeShared.isShieldActive
     private(set) var lastError: String?
+    @ObservationIgnored private var lastMonitoringCheck = Date.distantPast
 
     var isAuthorized: Bool { authorization == .approved }
     /// Counting app use and locking apps is on.
@@ -66,7 +69,12 @@ final class ScreenTimeService {
 
     /// Makes sure counting is running (after launch, or after access was granted).
     func ensureCounting() {
-        guard isActive, !isShieldActive, ScreenTimeShared.armedAt == nil else { return }
+        guard isActive, !isShieldActive else { return }
+        // Cheap enough, but no need every second.
+        guard Date().timeIntervalSince(lastMonitoringCheck) > 60 || ScreenTimeShared.armedAt == nil else { return }
+        lastMonitoringCheck = Date()
+        let monitoring = DeviceActivityCenter().activities.contains(ScreenTimeShared.activity)
+        guard ScreenTimeShared.armedAt == nil || !monitoring else { return }
         rearm()
     }
 
