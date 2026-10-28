@@ -1,62 +1,37 @@
 import SwiftUI
 
+/// Slow horizontal lines drifting across the break screen, a hint of distance.
+/// Freezes when Reduce Motion is on.
 struct MotionLinesView: View {
-    var animate: Bool = true
     var lineCount: Int = 12
-    var opacity: Double = 0.12
+    var opacity: Double = 0.08
 
-    @State private var phase: CGFloat = 0
-
-    private struct LineConfig: Identifiable {
-        let id: Int
-        let yFraction: CGFloat
-        let width: CGFloat
-        let thickness: CGFloat
-    }
-
-    private var lines: [LineConfig] {
-        (0..<lineCount).map { i in
-            let seed = Double(i)
-            let yFraction = (seed + 0.5) / Double(lineCount)
-            let width: CGFloat = CGFloat(100 + Int(seed * 37) % 200)
-            let thickness: CGFloat = CGFloat(1 + Int(seed * 13) % 3)
-            return LineConfig(id: i, yFraction: yFraction, width: width, thickness: thickness)
-        }
-    }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        GeometryReader { geometry in
-            ForEach(lines) { line in
-                let xOffset = animate ? animatedOffset(for: line, containerWidth: geometry.size.width) : staticOffset(for: line, containerWidth: geometry.size.width)
-
-                RoundedRectangle(cornerRadius: line.thickness / 2)
-                    .fill(Color.monoPrimary.opacity(opacity))
-                    .frame(width: line.width, height: line.thickness)
-                    .position(
-                        x: xOffset,
-                        y: geometry.size.height * line.yFraction
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { context in
+            let time = reduceMotion ? 0 : context.date.timeIntervalSinceReferenceDate
+            Canvas { graphics, size in
+                for index in 0..<lineCount {
+                    let seed = Double(index)
+                    let width = 100 + Double((index * 37) % 200)
+                    let thickness = 1 + Double((index * 13) % 3)
+                    let speed = 12 + Double((index * 17) % 24)
+                    let travel = Double(size.width) + width
+                    let offset = (time * speed + seed * 97).truncatingRemainder(dividingBy: travel)
+                    let rect = CGRect(
+                        x: offset - width,
+                        y: Double(size.height) * (seed + 0.5) / Double(lineCount),
+                        width: width,
+                        height: thickness
                     )
-            }
-        }
-        .onAppear {
-            guard animate else { return }
-            withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
-                phase = 1
+                    graphics.fill(
+                        Path(roundedRect: rect, cornerRadius: thickness / 2),
+                        with: .color(Color.monoPrimary.opacity(opacity))
+                    )
+                }
             }
         }
         .accessibilityHidden(true)
-    }
-
-    private func animatedOffset(for line: LineConfig, containerWidth: CGFloat) -> CGFloat {
-        let totalTravel = containerWidth + line.width
-        let startX = containerWidth + line.width / 2
-        let seedOffset = CGFloat(line.id) / CGFloat(lineCount)
-        let adjustedPhase = (phase + seedOffset).truncatingRemainder(dividingBy: 1.0)
-        return startX - totalTravel * adjustedPhase
-    }
-
-    private func staticOffset(for line: LineConfig, containerWidth: CGFloat) -> CGFloat {
-        let seed = CGFloat(line.id * 47 % lineCount)
-        return (seed / CGFloat(lineCount)) * containerWidth
     }
 }

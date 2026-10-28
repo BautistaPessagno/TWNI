@@ -9,52 +9,58 @@
 /* Begin PBXBuildFile section */
 		AA000001 /* TWNIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001 /* TWNIApp.swift */; };
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* ContentView.swift */; };
-		AA000003 /* ScreenSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* ScreenSession.swift */; };
-		AA000004 /* BreakRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* BreakRecord.swift */; };
-		AA000005 /* DailySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* DailySummary.swift */; };
 		AA000006 /* TimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* TimerManager.swift */; };
 		AA000007 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* NotificationService.swift */; };
-		AA000008 /* ScreenTimeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* ScreenTimeProtocol.swift */; };
 		AA000009 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009 /* DashboardView.swift */; };
 		AA000010 /* BreakOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010 /* BreakOverlayView.swift */; };
 		AA000011 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* StatsView.swift */; };
 		AA000012 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* SettingsView.swift */; };
-		AA000013 /* iOSScreenTimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* iOSScreenTimeService.swift */; };
-		AA000014 /* MacActivityDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014 /* MacActivityDetector.swift */; };
 		AA000015 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000015 /* MenuBarView.swift */; };
-		AA000016 /* MacScreenTimeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000016 /* MacScreenTimeReader.swift */; };
 		AA000017 /* TimeFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000017 /* TimeFormatting.swift */; };
 		AA000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000018 /* Assets.xcassets */; };
-		AA000019 /* AppBlockingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000020 /* AppBlockingService.swift */; };
-		AA000020 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021 /* Color+Extensions.swift */; };
 		AA000021 /* MotionLinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022 /* MotionLinesView.swift */; };
 		AA000022 /* MonochromeCardModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023 /* MonochromeCardModifier.swift */; };
+		AA000023 /* EyeTimerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* EyeTimerEngine.swift */; };
+		AA000024 /* BreakScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025 /* BreakScore.swift */; };
+		AA000025 /* ReminderPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ReminderPlanner.swift */; };
+		AA000026 /* EyeExercises.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000027 /* EyeExercises.swift */; };
+		AA000027 /* CycleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000028 /* CycleEntry.swift */; };
+		AA000028 /* MacPresenceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000029 /* MacPresenceMonitor.swift */; };
+		AA000029 /* BreakOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000030 /* BreakOverlayController.swift */; };
+		AA000030 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000031 /* OnboardingView.swift */; };
+		AA000031 /* ScienceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000032 /* ScienceView.swift */; };
+		AA000032 /* ScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* ScoreRing.swift */; };
+		AA000033 /* HoldToSkipButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034 /* HoldToSkipButton.swift */; };
+		AA000034 /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000035 /* NotificationAction.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		AB000001 /* TWNIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TWNIApp.swift; sourceTree = "<group>"; };
 		AB000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		AB000003 /* ScreenSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSession.swift; sourceTree = "<group>"; };
-		AB000004 /* BreakRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakRecord.swift; sourceTree = "<group>"; };
-		AB000005 /* DailySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummary.swift; sourceTree = "<group>"; };
 		AB000006 /* TimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerManager.swift; sourceTree = "<group>"; };
 		AB000007 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		AB000008 /* ScreenTimeProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeProtocol.swift; sourceTree = "<group>"; };
 		AB000009 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		AB000010 /* BreakOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakOverlayView.swift; sourceTree = "<group>"; };
 		AB000011 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		AB000012 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AB000013 /* iOSScreenTimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSScreenTimeService.swift; sourceTree = "<group>"; };
-		AB000014 /* MacActivityDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacActivityDetector.swift; sourceTree = "<group>"; };
 		AB000015 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
-		AB000016 /* MacScreenTimeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacScreenTimeReader.swift; sourceTree = "<group>"; };
 		AB000017 /* TimeFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFormatting.swift; sourceTree = "<group>"; };
 		AB000018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB000019 /* TWNI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TWNI.entitlements; sourceTree = "<group>"; };
-		AB000020 /* AppBlockingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBlockingService.swift; sourceTree = "<group>"; };
-		AB000021 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		AB000022 /* MotionLinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionLinesView.swift; sourceTree = "<group>"; };
 		AB000023 /* MonochromeCardModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonochromeCardModifier.swift; sourceTree = "<group>"; };
+		AB000024 /* EyeTimerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EyeTimerEngine.swift; sourceTree = "<group>"; };
+		AB000025 /* BreakScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakScore.swift; sourceTree = "<group>"; };
+		AB000026 /* ReminderPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderPlanner.swift; sourceTree = "<group>"; };
+		AB000027 /* EyeExercises.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EyeExercises.swift; sourceTree = "<group>"; };
+		AB000028 /* CycleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleEntry.swift; sourceTree = "<group>"; };
+		AB000029 /* MacPresenceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPresenceMonitor.swift; sourceTree = "<group>"; };
+		AB000030 /* BreakOverlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakOverlayController.swift; sourceTree = "<group>"; };
+		AB000031 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AB000032 /* ScienceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScienceView.swift; sourceTree = "<group>"; };
+		AB000033 /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
+		AB000034 /* HoldToSkipButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToSkipButton.swift; sourceTree = "<group>"; };
+		AB000035 /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -82,6 +88,7 @@
 			children = (
 				AB000001 /* TWNIApp.swift */,
 				AB000002 /* ContentView.swift */,
+				AE000012 /* Core */,
 				AE000003 /* Models */,
 				AE000004 /* Services */,
 				AE000005 /* Views */,
@@ -97,9 +104,7 @@
 		AE000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				AB000003 /* ScreenSession.swift */,
-				AB000004 /* BreakRecord.swift */,
-				AB000005 /* DailySummary.swift */,
+				AB000028 /* CycleEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -109,7 +114,6 @@
 			children = (
 				AB000006 /* TimerManager.swift */,
 				AB000007 /* NotificationService.swift */,
-				AB000008 /* ScreenTimeProtocol.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -121,6 +125,8 @@
 				AB000010 /* BreakOverlayView.swift */,
 				AB000011 /* StatsView.swift */,
 				AB000012 /* SettingsView.swift */,
+				AB000031 /* OnboardingView.swift */,
+				AB000032 /* ScienceView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -128,27 +134,17 @@
 		AE000006 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
-				AE000007 /* iOS */,
 				AE000008 /* macOS */,
 			);
 			path = Platform;
 			sourceTree = "<group>";
 		};
-		AE000007 /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				AB000013 /* iOSScreenTimeService.swift */,
-				AB000020 /* AppBlockingService.swift */,
-			);
-			path = iOS;
-			sourceTree = "<group>";
-		};
 		AE000008 /* macOS */ = {
 			isa = PBXGroup;
 			children = (
-				AB000014 /* MacActivityDetector.swift */,
+				AB000029 /* MacPresenceMonitor.swift */,
+				AB000030 /* BreakOverlayController.swift */,
 				AB000015 /* MenuBarView.swift */,
-				AB000016 /* MacScreenTimeReader.swift */,
 			);
 			path = macOS;
 			sourceTree = "<group>";
@@ -157,7 +153,6 @@
 			isa = PBXGroup;
 			children = (
 				AB000017 /* TimeFormatting.swift */,
-				AB000021 /* Color+Extensions.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -175,8 +170,22 @@
 			children = (
 				AB000022 /* MotionLinesView.swift */,
 				AB000023 /* MonochromeCardModifier.swift */,
+				AB000033 /* ScoreRing.swift */,
+				AB000034 /* HoldToSkipButton.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		AE000012 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				AB000024 /* EyeTimerEngine.swift */,
+				AB000025 /* BreakScore.swift */,
+				AB000026 /* ReminderPlanner.swift */,
+				AB000027 /* EyeExercises.swift */,
+				AB000035 /* NotificationAction.swift */,
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -250,25 +259,28 @@
 			files = (
 				AA000001 /* TWNIApp.swift in Sources */,
 				AA000002 /* ContentView.swift in Sources */,
-				AA000003 /* ScreenSession.swift in Sources */,
-				AA000004 /* BreakRecord.swift in Sources */,
-				AA000005 /* DailySummary.swift in Sources */,
+				AA000023 /* EyeTimerEngine.swift in Sources */,
+				AA000024 /* BreakScore.swift in Sources */,
+				AA000025 /* ReminderPlanner.swift in Sources */,
+				AA000026 /* EyeExercises.swift in Sources */,
+				AA000034 /* NotificationAction.swift in Sources */,
+				AA000027 /* CycleEntry.swift in Sources */,
 				AA000006 /* TimerManager.swift in Sources */,
 				AA000007 /* NotificationService.swift in Sources */,
-				AA000008 /* ScreenTimeProtocol.swift in Sources */,
 				AA000009 /* DashboardView.swift in Sources */,
-				AA000019 /* AppBlockingService.swift in Sources */,
 				AA000010 /* BreakOverlayView.swift in Sources */,
 				AA000011 /* StatsView.swift in Sources */,
 				AA000012 /* SettingsView.swift in Sources */,
-				AA000013 /* iOSScreenTimeService.swift in Sources */,
-				AA000014 /* MacActivityDetector.swift in Sources */,
-				AA000015 /* MenuBarView.swift in Sources */,
-				AA000016 /* MacScreenTimeReader.swift in Sources */,
-				AA000017 /* TimeFormatting.swift in Sources */,
-				AA000020 /* Color+Extensions.swift in Sources */,
+				AA000030 /* OnboardingView.swift in Sources */,
+				AA000031 /* ScienceView.swift in Sources */,
 				AA000021 /* MotionLinesView.swift in Sources */,
 				AA000022 /* MonochromeCardModifier.swift in Sources */,
+				AA000032 /* ScoreRing.swift in Sources */,
+				AA000033 /* HoldToSkipButton.swift in Sources */,
+				AA000028 /* MacPresenceMonitor.swift in Sources */,
+				AA000029 /* BreakOverlayController.swift in Sources */,
+				AA000015 /* MenuBarView.swift in Sources */,
+				AA000017 /* TimeFormatting.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,13 +413,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TWNI/TWNI.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 45;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -425,7 +440,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -444,13 +459,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TWNI/TWNI.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 45;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -468,7 +486,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

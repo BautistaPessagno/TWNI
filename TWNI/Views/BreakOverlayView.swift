@@ -1,105 +1,197 @@
 import SwiftUI
 
+/// The eye break: a guided 20-second look-away, then a short "done" moment.
+/// On macOS it fills every display (see BreakOverlayController); on iOS it
+/// covers the app.
 struct BreakOverlayView: View {
     var timerManager: TimerManager
-
-    @State private var animateGlow = false
+    /// False on secondary displays: they only dim and show the countdown.
+    var showsControls = true
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color.monoSurface,
-                    Color.monoProgressTrack,
-                    Color.monoBorder.opacity(0.6)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            MotionLinesView(animate: true, lineCount: 12, opacity: 0.08)
-                .ignoresSafeArea()
-
-            VStack(spacing: 40) {
-                Spacer()
-
-                Image(systemName: "eye")
-                    .font(.system(size: 60, weight: .light))
-                    .foregroundStyle(Color.monoPrimary)
-                    .shadow(color: Color.monoPrimary.opacity(animateGlow ? 0.3 : 0.1), radius: animateGlow ? 20 : 8)
-                    .onAppear {
-                        withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                            animateGlow = true
-                        }
-                    }
-
-                VStack(spacing: 12) {
-                    Text("Look 20 feet away")
-                        .font(.system(size: 32, weight: .heavy))
-                        .foregroundStyle(Color.monoPrimary)
-
-                    Text("Rest your eyes by focusing on something distant")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.monoSecondary)
-                        .multilineTextAlignment(.center)
+            background
+            if timerManager.engine.isResting {
+                if showsControls {
+                    restingContent
+                } else {
+                    secondaryScreenContent
                 }
-
-                BreakCountdownRing(
-                    remaining: timerManager.breakSecondsRemaining,
-                    total: timerManager.breakDurationSeconds,
-                    progress: timerManager.breakProgress
-                )
-
-                Spacer()
-
-                Button {
-                    timerManager.skipBreak()
-                } label: {
-                    Text("Skip break")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.monoSecondary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(Color.monoCard, in: Capsule())
-                        .overlay(Capsule().stroke(Color.monoBorder, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, 40)
+            } else if let done = timerManager.justCompleted {
+                completedContent(done)
             }
-            .padding()
         }
+        .animation(.easeInOut(duration: 0.3), value: timerManager.engine.isResting)
+        .animation(.easeInOut(duration: 0.3), value: timerManager.currentPrompt.id)
+    }
+
+    private var background: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color.monoSurface, Color.monoProgressTrack],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            MotionLinesView(lineCount: 12, opacity: 0.06)
+        }
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Resting
+
+    private var restingContent: some View {
+        let prompt = timerManager.currentPrompt
+        return VStack(spacing: 28) {
+            Spacer(minLength: 24)
+
+            Image(systemName: prompt.systemImage)
+                .font(.system(size: 52, weight: .light))
+                .foregroundStyle(Color.monoPrimary)
+                .contentTransition(.symbolEffect(.replace))
+                .accessibilityHidden(true)
+
+            VStack(spacing: 12) {
+                Text(prompt.title)
+                    .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(Color.monoPrimary)
+                Text(prompt.instruction)
+                    .font(.title3)
+                    .foregroundStyle(Color.monoSecondary)
+                    .frame(maxWidth: 520)
+            }
+            .multilineTextAlignment(.center)
+            .id(prompt.id)
+            .transition(.opacity)
+
+            CountdownRing(
+                remaining: timerManager.breakSecondsRemaining,
+                progress: timerManager.breakProgress
+            )
+
+            hint
+
+            Spacer(minLength: 24)
+
+            controls
+        }
+        .padding(32)
+    }
+
+    @ViewBuilder
+    private var hint: some View {
+        #if os(macOS)
+        if timerManager.engine.isRestPausedByInput {
+            Label("Hands off the keyboard and mouse. The timer waits for you.", systemImage: "hand.raised")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(Color.monoPrimary)
+        } else {
+            Text("Eye break \(timerManager.breakNumberToday) today")
+                .font(.callout)
+                .foregroundStyle(Color.monoSecondary)
+        }
+        #else
+        Text("You can lock your phone. We'll tell you when it's done.")
+            .font(.callout)
+            .foregroundStyle(Color.monoSecondary)
+            .multilineTextAlignment(.center)
+        #endif
+    }
+
+    @ViewBuilder
+    private var controls: some View {
+        HStack(spacing: 12) {
+            if timerManager.canSnooze {
+                Button {
+                    timerManager.snoozeBreak()
+                } label: {
+                    Label("5 more minutes", systemImage: "clock.arrow.circlepath")
+                }
+                .buttonStyle(CapsuleButtonStyle())
+            }
+            if timerManager.canSkip {
+                if timerManager.breakStyle.skipNeedsHold {
+                    HoldToSkipButton { timerManager.skipBreak() }
+                } else {
+                    Button("Skip") { timerManager.skipBreak() }
+                        .buttonStyle(CapsuleButtonStyle())
+                }
+            }
+        }
+        .padding(.bottom, 16)
+    }
+
+    private var secondaryScreenContent: some View {
+        VStack(spacing: 16) {
+            Text("Look away from the screen")
+                .font(.title.weight(.semibold))
+                .foregroundStyle(Color.monoPrimary)
+            CountdownRing(
+                remaining: timerManager.breakSecondsRemaining,
+                progress: timerManager.breakProgress,
+                size: 110
+            )
+        }
+    }
+
+    // MARK: - Done
+
+    private func completedContent(_ record: CycleRecord) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 64, weight: .light))
+                .foregroundStyle(Color.monoPrimary)
+                .symbolEffect(.bounce, value: record.endedAt)
+                .accessibilityHidden(true)
+            Text("Eyes rested")
+                .font(.largeTitle.weight(.bold))
+                .foregroundStyle(Color.monoPrimary)
+            if showsControls {
+                Text(completionDetail)
+                    .font(.title3)
+                    .foregroundStyle(Color.monoSecondary)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(32)
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var completionDetail: String {
+        var parts: [String] = []
+        if let score = timerManager.todayScore { parts.append("Break Score \(score)") }
+        let streak = timerManager.currentStreak
+        if streak > 0 { parts.append(streak == 1 ? "1-day streak" : "\(streak)-day streak") }
+        return parts.isEmpty ? "See you in \(timerManager.effectiveIntervalMinutes) minutes." : parts.joined(separator: " · ")
     }
 }
 
-// MARK: - Break Countdown Ring
+// MARK: - Countdown Ring
 
-private struct BreakCountdownRing: View {
+private struct CountdownRing: View {
     let remaining: Int
-    let total: Int
     let progress: Double
+    var size: CGFloat = 160
 
     var body: some View {
         ZStack {
             Circle()
                 .stroke(Color.monoProgressTrack, lineWidth: 8)
-                .frame(width: 160, height: 160)
-
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(
-                    Color.monoPrimary,
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                )
-                .frame(width: 160, height: 160)
+                .stroke(Color.monoPrimary, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 1), value: progress)
-
             Text("\(remaining)")
-                .font(.system(size: 56, weight: .ultraLight, design: .monospaced))
+                .font(.system(size: size * 0.35, weight: .ultraLight, design: .rounded))
+                .monospacedDigit()
                 .foregroundStyle(Color.monoPrimary)
                 .contentTransition(.numericText())
                 .animation(.default, value: remaining)
         }
+        .frame(width: size, height: size)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Eye break")
+        .accessibilityValue(remaining == 1 ? "1 second left" : "\(remaining) seconds left")
     }
 }
