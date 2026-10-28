@@ -18,6 +18,7 @@ struct SettingsView: View {
                 #endif
                 streakSection
                 #if os(iOS)
+                AutomaticBreaksSection(timerManager: timerManager)
                 RemindersSection(timerManager: timerManager)
                 #else
                 LaunchAtLoginSection()

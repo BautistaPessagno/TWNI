@@ -18,7 +18,11 @@ struct DashboardView: View {
                 if timerManager.notificationPermission == .denied {
                     NotificationsOffBanner()
                 }
-                SessionCard(timerManager: timerManager)
+                AutomaticBreaksCard(timerManager: timerManager)
+                if !timerManager.isAutomaticMode {
+                    // Without Screen Time access: reminders on a timer.
+                    SessionCard(timerManager: timerManager)
+                }
                 #else
                 ProtectionCard(timerManager: timerManager)
                 #endif

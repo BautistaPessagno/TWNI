@@ -291,9 +291,9 @@ struct OnboardingView: View {
             planRow("rectangle.inset.filled", "Covers every screen when it's time to look away")
             #else
             title("How it works on iPhone")
-            planRow("iphone", "iPhone doesn't let apps see your screen time, so you start a screen session when you settle in")
-            planRow("bell", "TWNI reminds you every 20 minutes, even in other apps")
-            planRow("hand.tap", "Tap a reminder for a guided 20-second break")
+            planRow("hourglass", "With Screen Time access, TWNI counts only the time you spend in your apps, even when it's closed")
+            planRow("lock", "After 20 minutes, those apps lock until you rest your eyes for 20 seconds")
+            planRow("bell", "No access? Start a screen session and TWNI reminds you every 20 minutes")
             #endif
         }
     }
