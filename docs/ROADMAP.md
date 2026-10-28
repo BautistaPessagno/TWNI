@@ -6,6 +6,7 @@ Research notes behind these decisions are summarized in the audit report shared 
 
 ## Done in v2 (this branch)
 
+- Fresh start: v2 uses a new data store; v1 history (mostly fabricated breaks) is not migrated.
 - New timer engine (`TWNI/Core`), unit-tested: counts real screen time on macOS (idle, sleep, lock,
   video and calls handled), no fake breaks, correct day attribution, persisted across launches.
 - Onboarding: hook, screen-hours question, symptoms, personal "mirror" number, one sourced fact,
@@ -60,8 +61,9 @@ Avoid: monetizing the Screen Time API itself (App Review 4.10). Keep the core sh
   presentation via `CGWindowListCopyWindowInfo`, Focus filters (`SetFocusFilterIntent`).
 - Short pre-break heads-up (10 s) with a "not now" that defers to the next natural pause.
 
-### 5. Business model
-- Core 20-20-20 free forever. Pro around $19.99–29.99/year plus lifetime (~$49.99); no weekly plans.
+### 5. Business model (on hold)
+- **Decision (Oct 2026): no paywall for now.** v2 ships fully free. Revisit once retention is known.
+- If it comes back: core 20-20-20 free forever, Pro around $19.99–29.99/year plus lifetime (~$49.99), no weekly plans.
   Pro: Strict mode extras, cross-device shield, exercise library, long-term trends, widget themes.
 - Paywall after the first completed break or on day 3, with a visible close, the price, and a trial
   reminder. Avoid the patterns that earn Opal/Brainrot bad reviews: hard paywalls, rating prompts before
