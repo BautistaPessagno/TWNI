@@ -134,6 +134,13 @@ final class TimerManager {
     @ObservationIgnored private var isConfigured = false
     let notifications = NotificationService()
 
+    #if os(iOS)
+    /// Automatic breaks: Screen Time counts app use and locks the apps.
+    let screenTime = ScreenTimeService()
+    /// The guided break running in the app belongs to a Screen Time lock.
+    @ObservationIgnored private var automaticBreakInProgress = false
+    #endif
+
     #if os(macOS)
     private let presenceMonitor: MacPresenceMonitor
     @ObservationIgnored private var overlay: BreakOverlayController?
@@ -237,7 +244,22 @@ final class TimerManager {
         )
     }
 
-    var canSnooze: Bool { engine.canSnooze }
+    var canSnooze: Bool {
+        #if os(iOS)
+        // Snoozing a Screen Time lock would need a timed unlock; not offered yet.
+        if automaticBreakInProgress { return false }
+        #endif
+        return engine.canSnooze
+    }
+
+    /// iOS: Screen Time is counting app use and will lock apps for breaks.
+    var isAutomaticMode: Bool {
+        #if os(iOS)
+        return screenTime.isActive
+        #else
+        return false
+        #endif
+    }
     var canSkip: Bool { breakStyle.allowsSkip }
 
     var today: DaySummary {
@@ -420,6 +442,9 @@ final class TimerManager {
     private func tick(at date: Date, notificationAction: NotificationAction? = nil) {
         now = date
         rollOverDayIfNeeded(date)
+        #if os(iOS)
+        syncScreenTime(at: date)
+        #endif
 
         #if os(macOS)
         if let pausedUntil, date >= pausedUntil { resume() }
@@ -470,6 +495,12 @@ final class TimerManager {
             case .snoozed:
                 break
             case .cycleEnded(let record):
+                #if os(iOS)
+                if automaticBreakInProgress {
+                    finishAutomaticBreak(record, at: date, quiet: quiet)
+                    continue
+                }
+                #endif
                 store(record)
                 if record.outcome == .completed, !quiet {
                     justCompleted = record
@@ -495,6 +526,9 @@ final class TimerManager {
         settings.missedGrace = 10 * 60
         #endif
         engine.apply(settings)
+        #if os(iOS)
+        screenTime.updateRule(intervalMinutes: effectiveIntervalMinutes, breakSeconds: effectiveBreakDurationSeconds)
+        #endif
     }
 
     private func startProtectionIfNeeded() {
@@ -681,6 +715,8 @@ final class TimerManager {
     /// iOS can't run the timer in the background, so hand the next reminders
     /// to the system. They match how the engine catches up on return.
     private func scheduleBackgroundNotifications() {
+        // With Screen Time on, the extensions handle reminders.
+        if automaticBreakInProgress || isAutomaticMode { return }
         guard engine.isRunning else {
             notifications.cancelAll()
             return
@@ -697,6 +733,53 @@ final class TimerManager {
         )
         if engine.isResting {
             notifications.scheduleRestDone(at: date.addingTimeInterval(engine.restRemaining), sound: soundEnabled, now: date)
+        }
+    }
+
+    // MARK: - Screen Time (automatic breaks)
+
+    /// Imports cycles finished on the shield, and runs the guided break when the
+    /// apps are locked and TWNI is open.
+    private func syncScreenTime(at date: Date) {
+        screenTime.refresh()
+        for record in screenTime.drainFinishedCycles() {
+            store(record)
+            if record.outcome == .completed, UIApplication.shared.applicationState == .active,
+               date.timeIntervalSince(record.endedAt) < 3 {
+                justCompleted = record
+            }
+        }
+
+        if automaticBreakInProgress, !screenTime.isShieldActive {
+            // Finished on the shield while TWNI was open: drop the in-app break.
+            automaticBreakInProgress = false
+            _ = engine.stop(at: date)
+            saveSnapshot()
+            return
+        }
+
+        guard screenTime.isActive else { return }
+        screenTime.ensureCounting()
+        guard screenTime.isShieldActive, !automaticBreakInProgress,
+              UIApplication.shared.applicationState == .active else { return }
+
+        // Apps are locked and the user is in TWNI: start the guided break.
+        if sessionEndsAt != nil { setSessionEnd(nil) }
+        if !engine.isRunning { engine.start(at: date) }
+        automaticBreakInProgress = true
+        handle(engine.startBreak(at: date), at: date)
+    }
+
+    /// The in-app guided break for a Screen Time lock ended: unlock the apps.
+    private func finishAutomaticBreak(_ record: CycleRecord, at date: Date, quiet: Bool) {
+        automaticBreakInProgress = false
+        let outcome: CycleOutcome = record.outcome == .completed ? .completed : .skipped
+        screenTime.finishBreak(outcome: outcome, restedSeconds: record.restedSeconds)
+        // The cycle is logged by finishBreak and imported on the next tick.
+        _ = engine.stop(at: date)
+        if outcome == .completed, !quiet {
+            justCompleted = record
+            celebrateCompletedBreak()
         }
     }
     #endif

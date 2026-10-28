@@ -24,7 +24,7 @@ No iOS Simulator SDK is installed on the main dev machine. Verify iOS-specific c
 **TWNI** is a 20-20-20 eye-break app (SwiftUI, multiplatform: iOS 18.0 + macOS 15.0), built in the format of screen-time apps like Opal: onboarding with a personal number, a daily Break Score, a streak, and a firm "look away" moment.
 
 - **macOS:** menu bar app. Counts screen time only while the user is at the Mac, treats stepping away as a rest, holds breaks during calls, and shows the break full screen on every display.
-- **iOS:** iPhone doesn't let apps see screen time without the Family Controls entitlement, so the user starts a **screen session** (30 min to 4 h) and gets reminder notifications every interval. Opal-style app shields are planned (see `docs/ROADMAP.md`).
+- **iOS:** with Screen Time access, **automatic breaks**: DeviceActivity counts only the time spent in all apps or the selected ones (even with TWNI closed), then the apps are shielded until an eye break is done (see `docs/SCREEN_TIME.md`). Three extension targets in `ScreenTimeExtensions/` share `TWNI/Shared/ScreenTimeShared.swift` through the App Group `group.com.twni.app`. Without access, the user starts a **screen session** (timer-based reminders). Distribution needs Apple's Family Controls (Distribution) entitlement for the app and each extension.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ All platform-specific code uses `#if os(iOS)` / `#if os(macOS)`. macOS-only file
 ## Key patterns
 
 - **`@Observable` (not `ObservableObject`)**. Views take `TimerManager` as a plain `var` (or `@Bindable var` when they bind settings).
-- **Handcrafted pbxproj** — IDs use prefixed patterns: `AA` (build files), `AB` (file refs), `AC` (product refs), `AD` (frameworks), `AE` (groups), `AF` (targets), `B0` (project), `B1` (config lists), `B2` (configs). Add new files following this convention (next free: `AA000034`, `AB000035`, `AE000013`).
+- **Handcrafted pbxproj** — IDs use prefixed patterns: `AA` (build files), `AB` (file refs), `AC` (product refs), `AD` (frameworks), `AE` (groups), `AF` (targets), `B0` (project), `B1` (config lists), `B2` (configs). Add new files following this convention (next free: `AA000048`, `AB000050`, `AE000019`, `AF000040`).
 - **`Swift.min()`/`Swift.max()`** — inside `Int` extensions, qualify `min`/`max` with `Swift.`.
 - **Timers use Combine** — `Timer.publish(every:on:in:)` with `.autoconnect().sink {}`. `NotificationService` is `@unchecked Sendable` with `@preconcurrency import UserNotifications`.
 - **Design system** — monochrome named colors in Assets.xcassets (`monoAccent`, `monoCard`, `monoBorder`, `monoPrimary`, `monoSecondary`, `monoTertiary`, `monoSurface`, `monoElevated`, `monoProgressFill`, `monoProgressTrack`). Secondary and tertiary text pass WCAG AA (≥ 4.5:1) on every surface; keep it that way. Reusable pieces: `.monochromeCard()`, `MonochromePrimaryButtonStyle`, `MonochromeSecondaryButtonStyle`, `CapsuleButtonStyle`, `ScoreRing`, `StreakBadge`, `InfoChip`, `HoldToSkipButton`.
