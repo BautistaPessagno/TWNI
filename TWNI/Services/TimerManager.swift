@@ -71,7 +71,8 @@ final class TimerManager {
     private(set) var engine = EyeTimerEngine()
     /// Refreshed every second so time-based views update.
     private(set) var now = Date()
-    private(set) var todayRecords: [CycleRecord] = []
+    /// Today's stored cycles (screen time split at midnight), without the live one.
+    private(set) var todayBase = DaySummary(day: Calendar.current.startOfDay(for: Date()))
     /// Summaries for days before today (today is computed live).
     private(set) var pastSummaries: [Date: DaySummary] = [:]
     private(set) var lifetimeCompleted = 0
@@ -127,7 +128,7 @@ final class TimerManager {
     @ObservationIgnored private var modelContext: ModelContext?
     @ObservationIgnored private var ticker: AnyCancellable?
     @ObservationIgnored private var lifecycleObservers: [NSObjectProtocol] = []
-    @ObservationIgnored private var recordsByDay: [Date: [CycleRecord]] = [:]
+    @ObservationIgnored private var records: [CycleRecord] = []
     @ObservationIgnored private var currentDay: Date
     @ObservationIgnored private var lastSnapshotSave = Date.distantPast
     @ObservationIgnored private var isConfigured = false
@@ -240,7 +241,15 @@ final class TimerManager {
     var canSkip: Bool { breakStyle.allowsSkip }
 
     var today: DaySummary {
-        DaySummary(day: currentDay, records: todayRecords, liveFocusSeconds: engine.focusedSeconds)
+        var summary = todayBase
+        let live = engine.focusedSeconds
+        guard live > 0 else { return summary }
+        // A stretch that started before midnight only adds today's part.
+        let start = engine.cycleStart ?? now
+        let shares = DayGrouping.focusByDay(startedAt: start, endedAt: max(now, start), focused: live)
+        summary.screenSeconds += shares[currentDay] ?? 0
+        summary.longestStretch = max(summary.longestStretch, live)
+        return summary
     }
 
     var todayScore: Int? {
@@ -398,13 +407,14 @@ final class TimerManager {
             // Tapping a reminder means "I'm resting now", even a late one.
             if engine.isRunning, !engine.isResting { startBreakNow() }
         case .snooze:
-            if engine.isRunning, !engine.isResting { _ = engine.startBreak(at: date) }
+            // With no snoozes left, leave the reminder unanswered rather than
+            // starting a break nobody is taking.
+            guard engine.isRunning, engine.snoozeCount < engine.settings.maxSnoozesPerCycle else { break }
+            if !engine.isResting { _ = engine.startBreak(at: date) }
             snoozeBreak()
         case .skip:
-            if engine.isResting || isSnoozed {
-                let events = engine.skipBreak(at: date)
-                handle(events, at: date)
-            }
+            guard canSkip, engine.isResting || isSnoozed else { break }
+            handle(engine.skipBreak(at: date), at: date)
         }
         #if os(iOS)
         if UIApplication.shared.applicationState != .active { scheduleBackgroundNotifications() }
@@ -533,13 +543,8 @@ final class TimerManager {
     // MARK: - History
 
     private func store(_ record: CycleRecord) {
-        let day = Calendar.current.startOfDay(for: record.endedAt)
-        recordsByDay[day, default: []].append(record)
-        if day == currentDay {
-            todayRecords = recordsByDay[day] ?? []
-        } else {
-            pastSummaries[day] = DaySummary(day: day, records: recordsByDay[day] ?? [])
-        }
+        records.append(record)
+        recomputeSummaries()
         if record.outcome == .completed { lifetimeCompleted += 1 }
 
         guard let modelContext else { return }
@@ -560,22 +565,18 @@ final class TimerManager {
             sortBy: [SortDescriptor(\.endedAt)]
         )
         let entries = (try? modelContext.fetch(descriptor)) ?? []
-
-        var byDay: [Date: [CycleRecord]] = [:]
-        for entry in entries {
-            byDay[calendar.startOfDay(for: entry.endedAt), default: []].append(entry.record)
-        }
-        recordsByDay = byDay
-        todayRecords = byDay[currentDay] ?? []
-        var past: [Date: DaySummary] = [:]
-        for (day, records) in byDay where day != currentDay {
-            past[day] = DaySummary(day: day, records: records)
-        }
-        pastSummaries = past
+        records = entries.map(\.record)
+        recomputeSummaries()
 
         let completed = CycleOutcome.completed.rawValue
         let countDescriptor = FetchDescriptor<CycleEntry>(predicate: #Predicate { $0.outcomeRaw == completed })
         lifetimeCompleted = (try? modelContext.fetchCount(countDescriptor)) ?? 0
+    }
+
+    private func recomputeSummaries() {
+        var grouped = DayGrouping.summaries(records: records)
+        todayBase = grouped.removeValue(forKey: currentDay) ?? DaySummary(day: currentDay)
+        pastSummaries = grouped
     }
 
     private func rollOverDayIfNeeded(_ date: Date) {
@@ -688,7 +689,13 @@ final class TimerManager {
         }
         let date = Date()
         let dates = ReminderPlanner.reminderDates(for: engine, now: date, until: sessionEndsAt)
-        notifications.scheduleReminders(at: dates, breakSeconds: effectiveBreakDurationSeconds, sound: soundEnabled, now: date)
+        notifications.scheduleReminders(
+            at: dates,
+            breakSeconds: effectiveBreakDurationSeconds,
+            sound: soundEnabled,
+            allowsSkipAndSnooze: breakStyle != .strict,
+            now: date
+        )
         if engine.isResting {
             notifications.scheduleRestDone(at: date.addingTimeInterval(engine.restRemaining), sound: soundEnabled, now: date)
         }

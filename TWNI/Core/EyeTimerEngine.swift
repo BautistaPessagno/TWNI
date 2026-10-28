@@ -341,6 +341,10 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
             isBreakDeferred = true
             return []
         }
+        isBreakDeferred = false
+        // Nobody at the screen: wait. Either they come back (the break starts
+        // then) or they stay away long enough for a natural rest.
+        guard countsAsScreenTime(presence) else { return [] }
         beginRest(at: now)
         return [.breakStarted]
     }
@@ -366,13 +370,19 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
         case .resting:
             // Away from the screen during a break is exactly what a break is.
             isRestPausedByInput = false
+            var credit = gap
+            if settings.restRequiresStillness, presence.isScreenOn, gap < settings.screenOffRestAfter {
+                // A short stall we didn't watch (not sleep): only the hands-off
+                // part at the end of it can count.
+                credit = min(gap, presence.idleSeconds)
+            }
             let needed = max(settings.breakDuration - restedSeconds, 0)
-            guard gap >= needed else {
-                restedSeconds += gap
+            guard credit >= needed else {
+                restedSeconds += credit
                 return []
             }
             restedSeconds = settings.breakDuration
-            let restEnd = gapStart.addingTimeInterval(needed)
+            let restEnd = now.addingTimeInterval(needed - credit)
             var events = finishRest(endedAt: restEnd)
             if settings.gapPolicy == .focus, now > restEnd {
                 events += reconcileFocusedGap(from: restEnd, to: now)
@@ -418,6 +428,8 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
             focusedSeconds += dueAt.timeIntervalSince(cursor)
 
             if now.timeIntervalSince(dueAt) <= settings.missedGrace {
+                // They kept using screens until they came back to rest.
+                focusedSeconds += now.timeIntervalSince(dueAt)
                 beginRest(at: now)
                 events.append(.breakStarted)
                 return events

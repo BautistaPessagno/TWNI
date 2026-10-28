@@ -28,6 +28,8 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
 
     private enum ID {
         static let category = "BREAK_REMINDER"
+        /// Strict mode: no Skip or Snooze on the notification either.
+        static let strictCategory = "BREAK_REMINDER_STRICT"
         static let start = "START_BREAK"
         static let snooze = "SNOOZE"
         static let skip = "SKIP"
@@ -47,7 +49,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
             actions: [start, snooze, skip],
             intentIdentifiers: []
         )
-        center.setNotificationCategories([category])
+        let strict = UNNotificationCategory(
+            identifier: ID.strictCategory,
+            actions: [start],
+            intentIdentifiers: []
+        )
+        center.setNotificationCategories([category, strict])
     }
 
     // MARK: - Permission
@@ -73,7 +80,13 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
     // MARK: - Scheduling
 
     /// Replaces every pending reminder with one per date.
-    func scheduleReminders(at dates: [Date], breakSeconds: Int, sound: Bool, now: Date = Date()) {
+    func scheduleReminders(
+        at dates: [Date],
+        breakSeconds: Int,
+        sound: Bool,
+        allowsSkipAndSnooze: Bool,
+        now: Date = Date()
+    ) {
         cancelReminders()
         for (index, date) in dates.enumerated() {
             let content = UNMutableNotificationContent()
@@ -81,7 +94,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
             content.body = "Look at something 6 m (20 ft) away for \(breakSeconds) seconds."
             content.sound = sound ? .default : nil
             content.interruptionLevel = .active
-            content.categoryIdentifier = ID.category
+            content.categoryIdentifier = allowsSkipAndSnooze ? ID.category : ID.strictCategory
             content.threadIdentifier = "eye-breaks"
             add(content, id: ID.reminder(index), at: date, now: now)
         }

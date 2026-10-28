@@ -201,6 +201,32 @@ final class EyeTimerEngineTests: XCTestCase {
         XCTAssertEqual(engine.focusedSeconds, 100, accuracy: 0.001)
     }
 
+    // MARK: - Due while away
+
+    func testSnoozedBreakWaitsWhileAwayAndBecomesNaturalRest() {
+        var engine = EyeTimerEngine()
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1200)
+        engine.snooze(at: focus.end)
+        // Walks away 3 minutes into the snooze; the snooze ends while they're gone.
+        let present = run(&engine, from: focus.end, seconds: 180)
+        let away = run(&engine, from: present.end, seconds: 400) { i in Presence(idleSeconds: TimeInterval(i)) }
+        XCTAssertFalse(away.events.contains(.breakStarted), "no break for an empty room")
+        XCTAssertEqual(records(away.events).map(\.outcome), [.natural])
+    }
+
+    func testDueBreakStartsWhenUserComesBack() {
+        var engine = EyeTimerEngine()
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1200)
+        engine.snooze(at: focus.end)
+        let present = run(&engine, from: focus.end, seconds: 200)
+        let away = run(&engine, from: present.end, seconds: 150) { i in Presence(idleSeconds: TimeInterval(i)) }
+        XCTAssertFalse(engine.isResting)
+        let back = run(&engine, from: away.end, seconds: 1)
+        XCTAssertEqual(back.events, [.breakStarted])
+    }
+
     // MARK: - Calls
 
     func testBreakWaitsForCallToEnd() {
@@ -246,6 +272,30 @@ final class EyeTimerEngineTests: XCTestCase {
         XCTAssertEqual(records(still.events).map(\.outcome), [.completed])
     }
 
+    func testStallWhileTypingDoesNotCompleteHandsOffBreak() {
+        var settings = EyeTimerSettings.classic
+        settings.restRequiresStillness = true
+        var engine = EyeTimerEngine(settings: settings)
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1200)
+        let typing = run(&engine, from: focus.end, seconds: 5) { _ in Presence(idleSeconds: 0.1) }
+        // 25 s without ticks, still typing at the end of it.
+        let events = engine.update(at: typing.end.addingTimeInterval(25), presence: Presence(idleSeconds: 0.2))
+        XCTAssertTrue(records(events).isEmpty)
+        XCTAssertTrue(engine.isResting)
+        XCTAssertLessThan(engine.restedSeconds, 1)
+    }
+
+    func testSleepDuringHandsOffBreakStillCompletesIt() {
+        var settings = EyeTimerSettings.classic
+        settings.restRequiresStillness = true
+        var engine = EyeTimerEngine(settings: settings)
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1200)
+        let events = engine.update(at: focus.end.addingTimeInterval(600), presence: Presence(idleSeconds: 0))
+        XCTAssertEqual(records(events).map(\.outcome), [.completed])
+    }
+
     func testSleepingDuringBreakCompletesIt() {
         var engine = EyeTimerEngine()
         engine.start(at: t0)
@@ -278,6 +328,7 @@ final class EyeTimerEngineTests: XCTestCase {
         let events = engine.update(at: t0.addingTimeInterval(1260), presence: .present)
         XCTAssertEqual(events, [.breakStarted])
         XCTAssertTrue(engine.isResting)
+        XCTAssertEqual(engine.focusedSeconds, 1260, accuracy: 0.001, "screen time until they came back counts")
     }
 
     func testIgnoredRemindersCountAsMissedWithCorrectTimes() {

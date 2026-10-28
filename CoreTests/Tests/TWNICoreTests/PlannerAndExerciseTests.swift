@@ -16,7 +16,10 @@ final class ReminderPlannerTests: XCTestCase {
         _ = engine.update(at: t0.addingTimeInterval(300), presence: .present)
         let now = t0.addingTimeInterval(300)
         let dates = ReminderPlanner.reminderDates(for: engine, now: now, until: t0.addingTimeInterval(3600))
-        XCTAssertEqual(dates, [1200, 2400, 3600].map { t0.addingTimeInterval($0) })
+        // Nothing at 60:00: the session is over by then.
+        XCTAssertEqual(dates, [1200, 2400].map { t0.addingTimeInterval($0) })
+        let later = ReminderPlanner.reminderDates(for: engine, now: now, until: t0.addingTimeInterval(3601))
+        XCTAssertEqual(later.last, t0.addingTimeInterval(3600))
     }
 
     func testPlannerMatchesEngineReconciliation() {

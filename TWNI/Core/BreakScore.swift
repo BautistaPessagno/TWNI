@@ -21,22 +21,29 @@ struct DaySummary: Equatable, Sendable {
         self.day = day
     }
 
+    /// Counts every record's screen time on `day`. For records that may cross
+    /// midnight, use `DayGrouping.summaries`, which splits screen time by day.
     init(day: Date, records: [CycleRecord], liveFocusSeconds: TimeInterval = 0) {
         self.day = day
         for record in records {
+            addOutcome(of: record)
             screenSeconds += record.focusedSeconds
-            restSeconds += record.restedSeconds
-            longestStretch = max(longestStretch, record.focusedSeconds)
-            switch record.outcome {
-            case .completed: completed += 1
-            case .skipped: skipped += 1
-            case .missed: missed += 1
-            case .natural: natural += 1
-            case .stopped: break
-            }
         }
         screenSeconds += liveFocusSeconds
         longestStretch = max(longestStretch, liveFocusSeconds)
+    }
+
+    /// Adds how a cycle ended (counts, rest, longest stretch), not its screen time.
+    mutating func addOutcome(of record: CycleRecord) {
+        restSeconds += record.restedSeconds
+        longestStretch = max(longestStretch, record.focusedSeconds)
+        switch record.outcome {
+        case .completed: completed += 1
+        case .skipped: skipped += 1
+        case .missed: missed += 1
+        case .natural: natural += 1
+        case .stopped: break
+        }
     }
 }
 
@@ -139,18 +146,52 @@ enum Streak {
     }
 }
 
-/// Groups cycle records into per-day summaries (by the day each cycle ended).
+/// Groups cycle records into per-day summaries. A cycle's outcome belongs to
+/// the day it ended; its screen time is split across the days it spanned.
 enum DayGrouping {
     static func summaries(
         records: [CycleRecord],
         calendar: Calendar = .current
     ) -> [Date: DaySummary] {
-        var grouped: [Date: [CycleRecord]] = [:]
+        var result: [Date: DaySummary] = [:]
         for record in records {
-            grouped[calendar.startOfDay(for: record.endedAt), default: []].append(record)
+            let endDay = calendar.startOfDay(for: record.endedAt)
+            result[endDay, default: DaySummary(day: endDay)].addOutcome(of: record)
+            let shares = focusByDay(
+                startedAt: record.startedAt,
+                endedAt: record.endedAt,
+                focused: record.focusedSeconds,
+                calendar: calendar
+            )
+            for (day, seconds) in shares {
+                result[day, default: DaySummary(day: day)].screenSeconds += seconds
+            }
         }
-        return grouped.reduce(into: [:]) { result, entry in
-            result[entry.key] = DaySummary(day: entry.key, records: entry.value)
+        return result
+    }
+
+    /// Splits `focused` seconds across calendar days in proportion to how much
+    /// of the stretch fell on each day.
+    static func focusByDay(
+        startedAt: Date,
+        endedAt: Date,
+        focused: TimeInterval,
+        calendar: Calendar = .current
+    ) -> [Date: TimeInterval] {
+        let endDay = calendar.startOfDay(for: endedAt)
+        let span = endedAt.timeIntervalSince(startedAt)
+        guard focused > 0, span > 0, calendar.startOfDay(for: startedAt) != endDay else {
+            return focused > 0 ? [endDay: focused] : [:]
         }
+        var result: [Date: TimeInterval] = [:]
+        var cursor = startedAt
+        for _ in 0..<400 where cursor < endedAt {
+            let day = calendar.startOfDay(for: cursor)
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            let sliceEnd = min(nextDay, endedAt)
+            result[day, default: 0] += focused * sliceEnd.timeIntervalSince(cursor) / span
+            cursor = sliceEnd
+        }
+        return result
     }
 }

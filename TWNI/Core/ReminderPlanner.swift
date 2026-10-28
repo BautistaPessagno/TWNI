@@ -19,7 +19,8 @@ enum ReminderPlanner {
         next = max(next, now.addingTimeInterval(5))
         var dates: [Date] = []
         while dates.count < limit {
-            if let end, next > end { break }
+            // A reminder at the very end of a session would arrive after it's over.
+            if let end, next >= end { break }
             dates.append(next)
             next = next.addingTimeInterval(engine.settings.focusInterval)
         }

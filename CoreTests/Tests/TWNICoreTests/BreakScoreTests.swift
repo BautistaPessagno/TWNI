@@ -135,6 +135,25 @@ final class BreakScoreTests: XCTestCase {
 
     // MARK: - Grouping
 
+    func testCycleAcrossMidnightSplitsScreenTime() {
+        // 23:50 to 00:10, completed after midnight.
+        let start = day(1).addingTimeInterval(-600)
+        let end = day(1).addingTimeInterval(600)
+        let record = CycleRecord(startedAt: start, endedAt: end, focusedSeconds: 1200, restedSeconds: 20, snoozeCount: 0, outcome: .completed)
+        let grouped = DayGrouping.summaries(records: [record], calendar: calendar)
+        XCTAssertEqual(grouped[day(0)]?.screenSeconds ?? 0, 600, accuracy: 0.001)
+        XCTAssertEqual(grouped[day(0)]?.completed, 0)
+        XCTAssertEqual(grouped[day(1)]?.screenSeconds ?? 0, 600, accuracy: 0.001)
+        XCTAssertEqual(grouped[day(1)]?.completed, 1, "the break belongs to the day it happened")
+    }
+
+    func testFocusByDayKeepsSameDayWhole() {
+        let start = day(0).addingTimeInterval(3600)
+        let shares = DayGrouping.focusByDay(startedAt: start, endedAt: start.addingTimeInterval(1200), focused: 1100, calendar: calendar)
+        XCTAssertEqual(shares, [day(0): 1100])
+        XCTAssertTrue(DayGrouping.focusByDay(startedAt: start, endedAt: start, focused: 0, calendar: calendar).isEmpty)
+    }
+
     func testGroupingByEndDay() {
         let lateNight = record(.completed, minutes: 20, endingAt: day(1).addingTimeInterval(600))
         let morning = record(.skipped, minutes: 20, endingAt: day(0).addingTimeInterval(36_000))
