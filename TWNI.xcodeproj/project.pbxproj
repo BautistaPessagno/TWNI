@@ -31,6 +31,7 @@
 		AA000031 /* ScienceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000032 /* ScienceView.swift */; };
 		AA000032 /* ScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033 /* ScoreRing.swift */; };
 		AA000033 /* HoldToSkipButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034 /* HoldToSkipButton.swift */; };
+		AA000034 /* NotificationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000035 /* NotificationAction.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +60,7 @@
 		AB000032 /* ScienceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScienceView.swift; sourceTree = "<group>"; };
 		AB000033 /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
 		AB000034 /* HoldToSkipButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToSkipButton.swift; sourceTree = "<group>"; };
+		AB000035 /* NotificationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAction.swift; sourceTree = "<group>"; };
 		AC000001 /* TWNI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TWNI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -181,6 +183,7 @@
 				AB000025 /* BreakScore.swift */,
 				AB000026 /* ReminderPlanner.swift */,
 				AB000027 /* EyeExercises.swift */,
+				AB000035 /* NotificationAction.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 				AA000024 /* BreakScore.swift in Sources */,
 				AA000025 /* ReminderPlanner.swift in Sources */,
 				AA000026 /* EyeExercises.swift in Sources */,
+				AA000034 /* NotificationAction.swift in Sources */,
 				AA000027 /* CycleEntry.swift in Sources */,
 				AA000006 /* TimerManager.swift in Sources */,
 				AA000007 /* NotificationService.swift in Sources */,
@@ -409,13 +413,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TWNI/TWNI.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 45;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -433,7 +440,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -452,13 +459,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TWNI/TWNI.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "TWNI/TWNI-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "TWNI/TWNI-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 45;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = CX6Q34K8F6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TWNI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -476,7 +486,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.twni.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

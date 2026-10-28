@@ -256,7 +256,48 @@ final class EyeTimerEngineTests: XCTestCase {
         XCTAssertEqual(engine.focusedSeconds, 660, accuracy: 0.001)
     }
 
+    func testCallEndingWithoutInputShowsDeferredBreak() {
+        var engine = EyeTimerEngine()
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1100)
+        let call = run(&engine, from: focus.end, seconds: 400) { i in
+            Presence(idleSeconds: TimeInterval(i + 1), isInCall: true)
+        }
+        let events = engine.update(at: call.end.addingTimeInterval(1), presence: Presence(idleSeconds: 401))
+        XCTAssertEqual(events, [.breakStarted])
+        XCTAssertTrue(engine.isResting)
+        XCTAssertEqual(engine.focusedSeconds, 1501)
+    }
+
+    func testVideoIdleIsNotCreditedAsRestAfterPlaybackEnds() {
+        var engine = EyeTimerEngine()
+        engine.start(at: t0)
+        let media = run(&engine, from: t0, seconds: 600) { i in
+            Presence(idleSeconds: TimeInterval(i + 1), isWatchingMedia: true)
+        }
+        let away = run(&engine, from: media.end, seconds: 299) { i in
+            Presence(idleSeconds: TimeInterval(601 + i))
+        }
+        XCTAssertTrue(records(away.events).isEmpty)
+        let natural = engine.update(at: media.end.addingTimeInterval(300), presence: Presence(idleSeconds: 900))
+        XCTAssertEqual(records(natural).map(\.outcome), [.natural])
+        XCTAssertEqual(records(natural).first?.endedAt, media.end)
+    }
+
     // MARK: - Rest verification
+
+    func testHandsOffRestCompletesWhileVideoKeepsPlaying() {
+        var settings = EyeTimerSettings.classic
+        settings.restRequiresStillness = true
+        var engine = EyeTimerEngine(settings: settings)
+        engine.start(at: t0)
+        let focus = run(&engine, from: t0, seconds: 1200)
+        let rest = run(&engine, from: focus.end, seconds: 20) { i in
+            Presence(idleSeconds: TimeInterval(i + 1), isWatchingMedia: true)
+        }
+        XCTAssertEqual(records(rest.events).map(\.outcome), [.completed])
+        XCTAssertEqual(engine.phase, .focusing)
+    }
 
     func testRestOnlyCountsWhileHandsAreOffWhenRequired() {
         var settings = EyeTimerSettings.classic

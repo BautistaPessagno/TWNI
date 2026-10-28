@@ -70,8 +70,7 @@ Avoid: monetizing the Screen Time API itself (App Review 4.10). Keep the core sh
   the price, trial-to-annual surprises, opaque scores.
 
 ### 6. Housekeeping
-- Commit a shared scheme (`xcshareddata/xcschemes/TWNI.xcscheme`) and stop tracking `xcuserdata/`.
-- Separate iOS and macOS entitlements files (`CODE_SIGN_ENTITLEMENTS[sdk=...]`) before adding Family Controls.
+- Shared scheme and separate iOS/macOS entitlements are in place for TestFlight. Stop tracking `xcuserdata/` in a follow-up.
 - Proper macOS app-icon sizes (all slots currently point at one 1024 px PNG).
 - Manually verify on device: microphone and video detection inside the App Sandbox, the overlay above
   full-screen apps, and notification actions after the app was killed.

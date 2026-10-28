@@ -49,6 +49,8 @@ The timer, score and streak logic lives in `TWNI/Core` (Foundation only) and has
 cd CoreTests && swift test
 ```
 
+For internal iPhone builds and the device smoke test, see [TestFlight](docs/TESTFLIGHT.md).
+
 ## Project structure
 
 ```

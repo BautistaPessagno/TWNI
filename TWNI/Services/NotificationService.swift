@@ -1,15 +1,6 @@
 import Foundation
 @preconcurrency import UserNotifications
 
-/// What the user did with a notification.
-enum NotificationAction: Sendable {
-    /// Tapped the notification itself.
-    case open
-    case startBreak
-    case snooze
-    case skip
-}
-
 enum NotificationPermission: Sendable {
     case unknown
     case notAsked
@@ -30,10 +21,11 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
         static let category = "BREAK_REMINDER"
         /// Strict mode: no Skip or Snooze on the notification either.
         static let strictCategory = "BREAK_REMINDER_STRICT"
-        static let start = "START_BREAK"
-        static let snooze = "SNOOZE"
-        static let skip = "SKIP"
-        static let restDone = "rest-done"
+        static let noSnoozeCategory = "BREAK_REMINDER_NO_SNOOZE"
+        static let start = NotificationAction.Identifier.start
+        static let snooze = NotificationAction.Identifier.snooze
+        static let skip = NotificationAction.Identifier.skip
+        static let restDone = NotificationAction.Identifier.restDone
         static func reminder(_ index: Int) -> String { "reminder-\(index)" }
     }
 
@@ -54,7 +46,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
             actions: [start],
             intentIdentifiers: []
         )
-        center.setNotificationCategories([category, strict])
+        let noSnooze = UNNotificationCategory(
+            identifier: ID.noSnoozeCategory,
+            actions: [start, skip],
+            intentIdentifiers: []
+        )
+        center.setNotificationCategories([category, strict, noSnooze])
     }
 
     // MARK: - Permission
@@ -84,7 +81,8 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
         at dates: [Date],
         breakSeconds: Int,
         sound: Bool,
-        allowsSkipAndSnooze: Bool,
+        allowsSkip: Bool,
+        allowsSnooze: Bool,
         now: Date = Date()
     ) {
         cancelReminders()
@@ -94,7 +92,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
             content.body = "Look at something 6 m (20 ft) away for \(breakSeconds) seconds."
             content.sound = sound ? .default : nil
             content.interruptionLevel = .active
-            content.categoryIdentifier = allowsSkipAndSnooze ? ID.category : ID.strictCategory
+            content.categoryIdentifier = !allowsSkip ? ID.strictCategory : (allowsSnooze ? ID.category : ID.noSnoozeCategory)
             content.threadIdentifier = "eye-breaks"
             add(content, id: ID.reminder(index), at: date, now: now)
         }
@@ -144,13 +142,10 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate, @un
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        let action: NotificationAction
-        switch response.actionIdentifier {
-        case ID.start: action = .startBreak
-        case ID.snooze: action = .snooze
-        case ID.skip: action = .skip
-        default: action = .open
-        }
+        let action = NotificationAction(
+            actionIdentifier: response.actionIdentifier,
+            requestIdentifier: response.notification.request.identifier
+        )
         await MainActor.run {
             self.onAction?(action)
         }

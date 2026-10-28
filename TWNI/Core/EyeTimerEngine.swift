@@ -122,6 +122,8 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
     private(set) var isFocusPaused = false
     /// True while a due break waits for a call to end.
     private(set) var isBreakDeferred = false
+    /// Keyboard idle during a call or video is still presence, not time away.
+    private var lastMediaOrCallAt: Date?
 
     init(settings: EyeTimerSettings = .classic) {
         self.settings = settings
@@ -240,8 +242,34 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
 
     // MARK: - Clock
 
+    /// Reconcile the clock and apply a notification response in one transition.
+    mutating func respond(to action: NotificationAction, at now: Date, presence: Presence, allowsSkip: Bool) -> [EyeTimerEvent] {
+        // Background notification actions must not implicitly start a rest.
+        // Only an accepted Rest/Snooze/Skip response can make that transition.
+        var events = update(at: now, presence: presence, allowsStartingBreak: false)
+        switch action {
+        case .open, .startBreak:
+            events += startBreak(at: now)
+        case .snooze:
+            guard isRunning, snoozeCount < settings.maxSnoozesPerCycle else { return events }
+            if !isResting { _ = startBreak(at: now) }
+            events += snooze(at: now)
+        case .skip:
+            if allowsSkip, isRunning {
+                // A late response may belong to a reminder already recorded
+                // as missed. Do not discard the next, not-yet-due cycle.
+                if phase == .focusing, focusedSeconds < settings.focusInterval { return events }
+                if !isResting { _ = startBreak(at: now) }
+                events += skipBreak(at: now)
+            }
+        case .restDone:
+            break
+        }
+        return events
+    }
+
     /// Advance the engine to `now`. Call about once per second.
-    mutating func update(at now: Date, presence: Presence) -> [EyeTimerEvent] {
+    mutating func update(at now: Date, presence: Presence, allowsStartingBreak: Bool = true) -> [EyeTimerEvent] {
         guard phase != .off else {
             lastUpdate = now
             return []
@@ -251,15 +279,25 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
         // A clock that moved backwards (time zone or manual change) adds nothing.
         let delta = max(now.timeIntervalSince(previous), 0)
 
-        if delta > settings.maxTickGap {
-            return handleGap(delta, endingAt: now, presence: presence)
+        var presence = presence
+        if presence.isScreenOn {
+            if presence.isWatchingMedia || presence.isInCall { lastMediaOrCallAt = now }
+            // During a guided rest, hands-off verification needs the real
+            // keyboard/mouse idle even if media keeps playing underneath it.
+            if !isResting, let lastMediaOrCallAt {
+                presence.idleSeconds = min(presence.idleSeconds, max(now.timeIntervalSince(lastMediaOrCallAt), 0))
+            }
         }
-        return advance(by: delta, at: now, presence: presence)
+
+        if delta > settings.maxTickGap {
+            return handleGap(delta, endingAt: now, presence: presence, allowsStartingBreak: allowsStartingBreak)
+        }
+        return advance(by: delta, at: now, presence: presence, allowsStartingBreak: allowsStartingBreak)
     }
 
     // MARK: - Internals
 
-    private mutating func advance(by delta: TimeInterval, at now: Date, presence: Presence) -> [EyeTimerEvent] {
+    private mutating func advance(by delta: TimeInterval, at now: Date, presence: Presence, allowsStartingBreak: Bool) -> [EyeTimerEvent] {
         switch phase {
         case .off:
             return []
@@ -276,7 +314,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
             } else {
                 isFocusPaused = true
             }
-            return breakIfDue(at: now, presence: presence)
+            return breakIfDue(at: now, presence: presence, allowsStartingBreak: allowsStartingBreak)
 
         case .resting:
             let still = !settings.restRequiresStillness
@@ -325,7 +363,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
         return events
     }
 
-    private mutating func breakIfDue(at now: Date, presence: Presence) -> [EyeTimerEvent] {
+    private mutating func breakIfDue(at now: Date, presence: Presence, allowsStartingBreak: Bool) -> [EyeTimerEvent] {
         let due: Bool
         switch phase {
         case .focusing: due = focusedSeconds >= settings.focusInterval
@@ -344,7 +382,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
         isBreakDeferred = false
         // Nobody at the screen: wait. Either they come back (the break starts
         // then) or they stay away long enough for a natural rest.
-        guard countsAsScreenTime(presence) else { return [] }
+        guard countsAsScreenTime(presence), allowsStartingBreak else { return [] }
         beginRest(at: now)
         return [.breakStarted]
     }
@@ -361,7 +399,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
         return record.map { [.cycleEnded($0)] } ?? []
     }
 
-    private mutating func handleGap(_ gap: TimeInterval, endingAt now: Date, presence: Presence) -> [EyeTimerEvent] {
+    private mutating func handleGap(_ gap: TimeInterval, endingAt now: Date, presence: Presence, allowsStartingBreak: Bool) -> [EyeTimerEvent] {
         let gapStart = now.addingTimeInterval(-gap)
         switch phase {
         case .off:
@@ -385,7 +423,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
             let restEnd = now.addingTimeInterval(needed - credit)
             var events = finishRest(endedAt: restEnd)
             if settings.gapPolicy == .focus, now > restEnd {
-                events += reconcileFocusedGap(from: restEnd, to: now)
+                events += reconcileFocusedGap(from: restEnd, to: now, allowsStartingBreak: allowsStartingBreak)
             }
             return events
 
@@ -398,7 +436,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
                 }
                 return []
             case .focus:
-                return reconcileFocusedGap(from: gapStart, to: now)
+                return reconcileFocusedGap(from: gapStart, to: now, allowsStartingBreak: allowsStartingBreak)
             }
         }
     }
@@ -406,7 +444,7 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
     /// iOS screen sessions: assume the user stayed on screens while the app was
     /// in the background. Every reminder that fired more than `missedGrace` ago
     /// counts as missed; a recent one starts the break now.
-    private mutating func reconcileFocusedGap(from start: Date, to now: Date) -> [EyeTimerEvent] {
+    private mutating func reconcileFocusedGap(from start: Date, to now: Date, allowsStartingBreak: Bool) -> [EyeTimerEvent] {
         var events: [EyeTimerEvent] = []
         var cursor = start
         if cycleStart == nil { cycleStart = start }
@@ -430,8 +468,10 @@ struct EyeTimerEngine: Equatable, Codable, Sendable {
             if now.timeIntervalSince(dueAt) <= settings.missedGrace {
                 // They kept using screens until they came back to rest.
                 focusedSeconds += now.timeIntervalSince(dueAt)
-                beginRest(at: now)
-                events.append(.breakStarted)
+                if allowsStartingBreak {
+                    beginRest(at: now)
+                    events.append(.breakStarted)
+                }
                 return events
             }
 

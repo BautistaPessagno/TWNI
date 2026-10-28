@@ -401,21 +401,7 @@ final class TimerManager {
 
     private func handleNotificationAction(_ action: NotificationAction) {
         let date = Date()
-        tick(at: date)
-        switch action {
-        case .open, .startBreak:
-            // Tapping a reminder means "I'm resting now", even a late one.
-            if engine.isRunning, !engine.isResting { startBreakNow() }
-        case .snooze:
-            // With no snoozes left, leave the reminder unanswered rather than
-            // starting a break nobody is taking.
-            guard engine.isRunning, engine.snoozeCount < engine.settings.maxSnoozesPerCycle else { break }
-            if !engine.isResting { _ = engine.startBreak(at: date) }
-            snoozeBreak()
-        case .skip:
-            guard canSkip, engine.isResting || isSnoozed else { break }
-            handle(engine.skipBreak(at: date), at: date)
-        }
+        tick(at: date, notificationAction: action)
         #if os(iOS)
         if UIApplication.shared.applicationState != .active { scheduleBackgroundNotifications() }
         #endif
@@ -431,7 +417,7 @@ final class TimerManager {
             }
     }
 
-    private func tick(at date: Date) {
+    private func tick(at date: Date, notificationAction: NotificationAction? = nil) {
         now = date
         rollOverDayIfNeeded(date)
 
@@ -439,13 +425,17 @@ final class TimerManager {
         if let pausedUntil, date >= pausedUntil { resume() }
         #else
         if let end = sessionEndsAt, date >= end {
-            handle(engine.update(at: end, presence: .present), at: end, quiet: true)
+            handle(engine.update(at: end, presence: .present, allowsStartingBreak: false), at: end, quiet: true)
             finishSession(at: end)
             return
         }
         #endif
 
-        handle(engine.update(at: date, presence: currentPresence()), at: date)
+        if let notificationAction {
+            handle(engine.respond(to: notificationAction, at: date, presence: currentPresence(), allowsSkip: canSkip), at: date)
+        } else {
+            handle(engine.update(at: date, presence: currentPresence(), allowsStartingBreak: allowsAutomaticBreak), at: date)
+        }
         syncOverlay()
         if date.timeIntervalSince(lastSnapshotSave) > 15 { saveSnapshot() }
     }
@@ -459,6 +449,14 @@ final class TimerManager {
         #else
         // The timer only ticks while the app is on screen.
         return .present
+        #endif
+    }
+
+    private var allowsAutomaticBreak: Bool {
+        #if os(iOS)
+        UIApplication.shared.applicationState == .active
+        #else
+        true
         #endif
     }
 
@@ -601,11 +599,11 @@ final class TimerManager {
         let date = Date()
         #if os(iOS)
         if let end = sessionEndsAt, end <= date {
-            handle(engine.update(at: end, presence: .present), at: end, quiet: true)
+            handle(engine.update(at: end, presence: .present, allowsStartingBreak: false), at: end, quiet: true)
             finishSession(at: end)
         }
         #endif
-        handle(engine.update(at: date, presence: currentPresence()), at: date, quiet: true)
+        handle(engine.update(at: date, presence: currentPresence(), allowsStartingBreak: allowsAutomaticBreak), at: date, quiet: true)
     }
 
     private func saveSnapshot() {
@@ -693,7 +691,8 @@ final class TimerManager {
             at: dates,
             breakSeconds: effectiveBreakDurationSeconds,
             sound: soundEnabled,
-            allowsSkipAndSnooze: breakStyle != .strict,
+            allowsSkip: canSkip,
+            allowsSnooze: engine.snoozeCount < engine.settings.maxSnoozesPerCycle,
             now: date
         )
         if engine.isResting {
