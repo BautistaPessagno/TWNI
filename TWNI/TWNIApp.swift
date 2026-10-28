@@ -3,53 +3,27 @@ import SwiftData
 
 @main
 struct TWNIApp: App {
-    @State private var timerManager = TimerManager()
+    @State private var timerManager: TimerManager
+    private let modelContainer: ModelContainer
 
-    #if os(macOS)
-    @State private var activityDetector = MacActivityDetector()
-    #endif
-
-    #if os(iOS)
-    @State private var appBlockingService = AppBlockingService()
-    #endif
-
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([ScreenSession.self, BreakRecord.self])
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false
-        )
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    init() {
+        // Set up once, before any window exists, so the timer, notification
+        // actions and the macOS overlay work even with no window open.
+        let container = Self.makeModelContainer()
+        let manager = TimerManager()
+        manager.configure(modelContext: container.mainContext)
+        modelContainer = container
+        _timerManager = State(initialValue: manager)
+    }
 
     var body: some Scene {
-        WindowGroup {
+        #if os(macOS)
+        Window("TWNI", id: "main") {
             ContentView(timerManager: timerManager)
-                .modelContainer(sharedModelContainer)
-                .task {
-                    #if os(iOS)
-                    timerManager.appBlockingService = appBlockingService
-                    #endif
-
-                    timerManager.configure(modelContext: sharedModelContainer.mainContext)
-
-                    await timerManager.notificationService.requestAuthorization()
-                    timerManager.notificationService.registerActions()
-
-                    #if os(macOS)
-                    activityDetector.start(timerManager: timerManager)
-                    #endif
-                }
         }
-        #if os(macOS)
-        .windowResizability(.contentSize)
-        #endif
+        .modelContainer(modelContainer)
+        .windowResizability(.contentMinSize)
 
-        #if os(macOS)
         MenuBarExtra {
             MenuBarView(timerManager: timerManager)
         } label: {
@@ -59,44 +33,30 @@ struct TWNIApp: App {
 
         Settings {
             SettingsView(timerManager: timerManager)
-                .modelContainer(sharedModelContainer)
         }
+        #else
+        WindowGroup {
+            ContentView(timerManager: timerManager)
+        }
+        .modelContainer(modelContainer)
         #endif
     }
-}
 
-// MARK: - Menu Bar Label
-
-#if os(macOS)
-private struct MenuBarLabel: View {
-    var timerManager: TimerManager
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-            if timerManager.state == .active {
-                Text(countdownText)
-                    .monospacedDigit()
-            } else if timerManager.state == .breakActive {
-                Text("\(timerManager.breakSecondsRemaining)s")
-                    .monospacedDigit()
+    /// Uses a new store name: data from the old models wasn't reliable enough
+    /// to migrate. Falls back to memory instead of crashing on launch.
+    private static func makeModelContainer() -> ModelContainer {
+        let schema = Schema([CycleEntry.self])
+        do {
+            let configuration = ModelConfiguration("TWNI-v2", schema: schema)
+            return try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            print("TWNI: couldn't open the store, using memory instead: \(error)")
+            let memory = ModelConfiguration("TWNI-v2-memory", schema: schema, isStoredInMemoryOnly: true)
+            do {
+                return try ModelContainer(for: schema, configurations: [memory])
+            } catch {
+                fatalError("TWNI: couldn't create an in-memory store: \(error)")
             }
         }
     }
-
-    private var icon: String {
-        switch timerManager.state {
-        case .active: "eye"
-        case .breakActive: "eye.fill"
-        case .disabled: "eye.slash"
-        }
-    }
-
-    private var countdownText: String {
-        let remaining = timerManager.secondsUntilBreak
-        let minutes = remaining / 60
-        let seconds = remaining % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
 }
-#endif

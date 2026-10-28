@@ -1,104 +1,192 @@
 import SwiftUI
 #if os(macOS)
 import ServiceManagement
+#else
+import UIKit
 #endif
 
 struct SettingsView: View {
-    var timerManager: TimerManager
-
-    @AppStorage("intervalMinutes") private var intervalMinutes: Int = 20
-    @AppStorage("breakDurationSeconds") private var breakDurationSeconds: Int = 20
-    @AppStorage("soundEnabled") private var soundEnabled: Bool = true
-
-    #if os(macOS)
-    @State private var launchAtLogin = false
-    #endif
+    @Bindable var timerManager: TimerManager
 
     var body: some View {
-        Form {
-            Section("Mode") {
-                Picker("Protection Mode", selection: Binding(
-                    get: { timerManager.timerMode },
-                    set: { timerManager.timerMode = $0 }
-                )) {
-                    Text("Auto (20-20-20)").tag(TimerMode.auto)
-                    Text("Manual").tag(TimerMode.manual)
-                }
-                .pickerStyle(.segmented)
-
-                if timerManager.timerMode == .auto {
-                    Text("Every 20 minutes, look at something 20 feet away for 20 seconds.")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.monoTertiary)
-                } else {
-                    Stepper(
-                        "Interval: \(intervalMinutes) min",
-                        value: $intervalMinutes,
-                        in: 1...120
-                    )
-                    .onChange(of: intervalMinutes) {
-                        timerManager.intervalMinutes = intervalMinutes
-                    }
-
-                    Stepper(
-                        "Break duration: \(breakDurationSeconds) sec",
-                        value: $breakDurationSeconds,
-                        in: 5...120,
-                        step: 5
-                    )
-                    .onChange(of: breakDurationSeconds) {
-                        timerManager.breakDurationSeconds = breakDurationSeconds
-                    }
-                }
+        NavigationStack {
+            Form {
+                ruleSection
+                breaksSection
+                #if os(macOS)
+                smartPauseSection
+                #endif
+                streakSection
+                #if os(iOS)
+                RemindersSection(timerManager: timerManager)
+                #else
+                LaunchAtLoginSection()
+                #endif
+                aboutSection
             }
-
-            Section("Behavior") {
-                Toggle("Sound effects", isOn: $soundEnabled)
-                    .onChange(of: soundEnabled) {
-                        timerManager.soundEnabled = soundEnabled
-                    }
-            }
-
-            #if os(iOS)
-            AppBlockingSection(timerManager: timerManager)
-            #endif
-
-            #if os(macOS)
-            Section("macOS") {
-                Toggle("Launch at login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) {
-                        toggleLaunchAtLogin(launchAtLogin)
-                    }
-                    .onAppear {
-                        launchAtLogin = SMAppService.mainApp.status == .enabled
-                    }
-            }
-            #endif
-
-            Section("About") {
-                LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
-                LabeledContent("Rule", value: "20-20-20")
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("The 20-20-20 Rule")
-                        .font(.subheadline.weight(.heavy))
-                    Text("Every 20 minutes, look at something 20 feet away for 20 seconds. This helps reduce eye strain from prolonged screen use.")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.monoTertiary)
-                }
-                .padding(.vertical, 4)
-            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.monoSurface)
+            .navigationTitle("Settings")
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color.monoSurface)
         #if os(macOS)
-        .frame(minWidth: 400, minHeight: 300)
+        .frame(minWidth: 460, minHeight: 420)
         #endif
     }
 
+    // MARK: - Sections
+
+    private var ruleSection: some View {
+        Section {
+            Picker("Rule", selection: $timerManager.timerMode) {
+                Text("20-20-20").tag(TimerMode.auto)
+                Text("Custom").tag(TimerMode.manual)
+            }
+            .pickerStyle(.segmented)
+
+            if timerManager.timerMode == .manual {
+                Stepper(
+                    "Break every \(timerManager.intervalMinutes) min",
+                    value: $timerManager.intervalMinutes,
+                    in: 5...90,
+                    step: 5
+                )
+                Stepper(
+                    "Look away for \(timerManager.breakDurationSeconds) s",
+                    value: $timerManager.breakDurationSeconds,
+                    in: 10...120,
+                    step: 5
+                )
+            }
+        } header: {
+            Text("Your rule")
+        } footer: {
+            Text(timerManager.timerMode == .auto
+                 ? "Every 20 minutes of screen time, look at something 6 m (20 ft) away for 20 seconds."
+                 : "Every \(timerManager.intervalMinutes) minutes of screen time, look far away for \(timerManager.breakDurationSeconds) seconds.")
+        }
+    }
+
+    private var breaksSection: some View {
+        Section {
+            Picker("Break style", selection: $timerManager.breakStyle) {
+                ForEach(BreakStyle.allCases) { style in
+                    Text(style.title).tag(style)
+                }
+            }
+            Toggle("Sound when a break ends", isOn: $timerManager.soundEnabled)
+        } header: {
+            Text("Breaks")
+        } footer: {
+            Text(timerManager.breakStyle.summary)
+        }
+    }
+
     #if os(macOS)
-    private func toggleLaunchAtLogin(_ enabled: Bool) {
+    private var smartPauseSection: some View {
+        Section {
+            Toggle("Hold breaks during calls", isOn: $timerManager.holdBreaksDuringCalls)
+            Toggle("Count videos as screen time", isOn: $timerManager.countVideoAsScreenTime)
+        } header: {
+            Text("Smart pause")
+        } footer: {
+            Text("TWNI checks whether the microphone is in use and whether a video is keeping the display awake. It never listens or records.")
+        }
+    }
+    #endif
+
+    private var streakSection: some View {
+        Section {
+            Picker("Daily goal", selection: $timerManager.dailyGoal) {
+                ForEach([50, 60, 70, 80, 90], id: \.self) { goal in
+                    Text("Break Score \(goal)").tag(goal)
+                }
+            }
+        } header: {
+            Text("Streak")
+        } footer: {
+            Text("Your streak grows on days your Break Score reaches this goal. Light days, with less than about an hour of screen time, don't count either way.")
+        }
+    }
+
+    private var aboutSection: some View {
+        Section {
+            NavigationLink("The science behind TWNI") {
+                ScienceView()
+            }
+            LabeledContent(
+                "Version",
+                value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+            )
+            Button("Replay the introduction") {
+                timerManager.resetOnboarding()
+            }
+        } header: {
+            Text("About")
+        } footer: {
+            Text("TWNI is a wellness tool, not a medical device. If you have eye pain, sudden changes in vision or symptoms that don't go away, see an eye doctor.")
+        }
+    }
+}
+
+// MARK: - iOS reminders
+
+#if os(iOS)
+private struct RemindersSection: View {
+    var timerManager: TimerManager
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        Section {
+            switch timerManager.notificationPermission {
+            case .allowed:
+                Label("Reminders are on", systemImage: "checkmark.circle")
+            case .denied:
+                Button("Turn on in Settings") {
+                    if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                        openURL(url)
+                    }
+                }
+            case .notAsked, .unknown:
+                Button("Allow reminders") {
+                    Task { await timerManager.requestNotificationPermission() }
+                }
+            }
+        } header: {
+            Text("Reminders")
+        } footer: {
+            Text("During a screen session, TWNI sends a reminder when it's time to look away, even while you're in other apps.")
+        }
+    }
+}
+#endif
+
+// MARK: - macOS launch at login
+
+#if os(macOS)
+private struct LaunchAtLoginSection: View {
+    @State private var status = SMAppService.mainApp.status
+
+    var body: some View {
+        Section {
+            Toggle("Open TWNI when you log in", isOn: Binding(
+                get: { status == .enabled },
+                set: { setEnabled($0) }
+            ))
+            if status == .requiresApproval {
+                Button("Approve in System Settings") {
+                    SMAppService.openSystemSettingsLoginItems()
+                }
+            }
+        } header: {
+            Text("Mac")
+        } footer: {
+            Text("Eye breaks only work while TWNI is running.")
+        }
+        .onAppear { status = SMAppService.mainApp.status }
+    }
+
+    private func setEnabled(_ enabled: Bool) {
         do {
             if enabled {
                 try SMAppService.mainApp.register()
@@ -106,81 +194,9 @@ struct SettingsView: View {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            print("Launch at login error: \(error)")
+            print("TWNI: launch at login failed: \(error)")
         }
-    }
-    #endif
-}
-
-// MARK: - App Blocking Section (iOS)
-
-#if os(iOS)
-private struct AppBlockingSection: View {
-    var timerManager: TimerManager
-
-    var body: some View {
-        if let blockingService = timerManager.appBlockingService, blockingService.isAvailable {
-            Section("App Blocking During Breaks") {
-                if blockingService.isAuthorized {
-                    Toggle("Block apps during breaks", isOn: Binding(
-                        get: { blockingService.isBlockingEnabled },
-                        set: { blockingService.isBlockingEnabled = $0 }
-                    ))
-
-                    #if canImport(FamilyControls)
-                    if blockingService.isBlockingEnabled {
-                        NavigationLink {
-                            AppSelectionView(blockingService: blockingService)
-                        } label: {
-                            LabeledContent("Apps to block", value: appsSelectedLabel)
-                        }
-                    }
-                    #endif
-                } else {
-                    Button("Authorize App Blocking") {
-                        Task {
-                            await blockingService.requestAuthorization()
-                        }
-                    }
-
-                    Text("Requires Screen Time authorization to block apps during breaks.")
-                        .font(.caption)
-                        .foregroundStyle(Color.monoTertiary)
-                }
-            }
-        }
-    }
-
-    private var appsSelectedLabel: String {
-        #if canImport(FamilyControls)
-        let count = blockingService.activitySelection.applicationTokens.count
-            + blockingService.activitySelection.categoryTokens.count
-        return count > 0 ? "\(count) selected" : "None"
-        #else
-        return "N/A"
-        #endif
-    }
-
-    private var blockingService: AppBlockingService {
-        timerManager.appBlockingService!
-    }
-}
-#endif
-
-// MARK: - App Selection View (iOS)
-
-#if os(iOS) && canImport(FamilyControls)
-import FamilyControls
-
-private struct AppSelectionView: View {
-    var blockingService: AppBlockingService
-
-    var body: some View {
-        FamilyActivityPicker(selection: Binding(
-            get: { blockingService.activitySelection },
-            set: { blockingService.activitySelection = $0 }
-        ))
-        .navigationTitle("Select Apps")
+        status = SMAppService.mainApp.status
     }
 }
 #endif

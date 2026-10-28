@@ -1,204 +1,186 @@
 import SwiftUI
-import SwiftData
 import Charts
 
+/// Progress: streaks, the week's Break Scores, breaks and screen time.
 struct StatsView: View {
-    @Query(sort: \ScreenSession.startDate, order: .reverse)
-    private var sessions: [ScreenSession]
+    var timerManager: TimerManager
+
+    private var days: [DaySummary] { timerManager.lastSevenDays }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
-                    TodaySummaryCard(summary: todaySummary)
-                    WeeklyScreenTimeChart(dailySummaries: weekSummaries)
-                    BreaksChart(dailySummaries: weekSummaries)
+                VStack(spacing: 16) {
+                    StreakSummary(timerManager: timerManager)
+                    ScoreChart(days: days, timerManager: timerManager)
+                    BreaksChart(days: days)
+                    ScreenTimeChart(days: days)
                 }
                 .padding()
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
             }
-            .scrollContentBackground(.hidden)
             .background(Color.monoSurface)
-            .navigationTitle("Statistics")
+            .navigationTitle("Progress")
         }
-    }
-
-    // MARK: - Computed
-
-    private var todaySummary: DailySummary {
-        summaryForDate(Date())
-    }
-
-    private var weekSummaries: [DailySummary] {
-        let calendar = Calendar.current
-        return (0..<7).reversed().compactMap { daysAgo in
-            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) else {
-                return nil
-            }
-            return summaryForDate(date)
-        }
-    }
-
-    private func summaryForDate(_ date: Date) -> DailySummary {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-
-        let daySessions = sessions.filter {
-            $0.startDate >= startOfDay && $0.startDate < endOfDay
-        }
-
-        let totalSeconds = daySessions.reduce(0) { $0 + $1.durationSeconds }
-        let allBreaks = daySessions.flatMap(\.breaks)
-        let taken = allBreaks.filter(\.completed).count
-        let skipped = allBreaks.filter { !$0.completed }.count
-
-        return DailySummary(
-            id: startOfDay,
-            date: startOfDay,
-            totalScreenTimeSeconds: totalSeconds,
-            sessionsCount: daySessions.count,
-            breaksTaken: taken,
-            breaksSkipped: skipped
-        )
     }
 }
 
-// MARK: - Today Summary Card
-
-private struct TodaySummaryCard: View {
-    let summary: DailySummary
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("Today")
-                .font(.headline.weight(.heavy))
-                .foregroundStyle(Color.monoPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            HStack(spacing: 20) {
-                SummaryMetric(
-                    title: "Screen Time",
-                    value: summary.totalScreenTimeFormatted,
-                    icon: "desktopcomputer",
-                    valueWeight: .heavy
-                )
-
-                SummaryMetric(
-                    title: "Sessions",
-                    value: "\(summary.sessionsCount)",
-                    icon: "clock",
-                    valueWeight: .bold
-                )
-
-                SummaryMetric(
-                    title: "Breaks",
-                    value: "\(summary.breaksTaken)/\(summary.breaksTaken + summary.breaksSkipped)",
-                    icon: "eye",
-                    valueWeight: .medium
-                )
-
-                SummaryMetric(
-                    title: "Score",
-                    value: "\(Int(summary.completionRate * 100))%",
-                    icon: "star.fill",
-                    valueWeight: .semibold
-                )
-            }
-        }
-        .padding()
-        .monochromeCard()
-    }
+private func weekdayLabel(_ date: Date) -> String {
+    date.formatted(.dateTime.weekday(.abbreviated))
 }
 
-private struct SummaryMetric: View {
-    let title: String
-    let value: String
-    let icon: String
-    var valueWeight: Font.Weight = .bold
+// MARK: - Streak
+
+private struct StreakSummary: View {
+    var timerManager: TimerManager
 
     var body: some View {
+        HStack(spacing: 0) {
+            metric(value: "\(timerManager.currentStreak)", label: "Current streak", icon: "flame.fill")
+            metric(value: "\(timerManager.bestStreak)", label: "Best streak", icon: "trophy")
+            metric(value: "\(timerManager.lifetimeCompleted)", label: "Eye breaks", icon: "eye")
+        }
+        .padding(.vertical, 20)
+        .monochromeCard(cornerRadius: 20)
+    }
+
+    private func metric(value: String, label: String, icon: String) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundStyle(Color.monoSecondary)
+                .accessibilityHidden(true)
             Text(value)
-                .font(.headline)
-                .fontWeight(valueWeight)
+                .font(.title.weight(.bold))
+                .monospacedDigit()
                 .foregroundStyle(Color.monoPrimary)
-            Text(title)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(Color.monoTertiary)
+            Text(label)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Color.monoSecondary)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
-// MARK: - Weekly Screen Time Chart
+// MARK: - Charts
 
-private struct WeeklyScreenTimeChart: View {
-    let dailySummaries: [DailySummary]
+private struct ChartCard<Content: View>: View {
+    let title: String
+    let subtitle: String
+    @ViewBuilder var content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Screen Time")
-                .font(.headline.weight(.heavy))
-                .foregroundStyle(Color.monoPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(Color.monoPrimary)
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(Color.monoSecondary)
+            }
+            content
+                .frame(height: 180)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .monochromeCard(cornerRadius: 20)
+    }
+}
 
-            Chart(dailySummaries) { summary in
+private struct ScoreChart: View {
+    let days: [DaySummary]
+    var timerManager: TimerManager
+
+    var body: some View {
+        ChartCard(title: "Break Score", subtitle: "Dashed line: your daily goal") {
+            Chart {
+                ForEach(days, id: \.day) { day in
+                    if let score = timerManager.score(for: day) {
+                        BarMark(
+                            x: .value("Day", weekdayLabel(day.day)),
+                            y: .value("Score", score)
+                        )
+                        .foregroundStyle(Color.monoPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                }
+                RuleMark(y: .value("Goal", timerManager.dailyGoal))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .foregroundStyle(Color.monoSecondary)
+            }
+            .chartYScale(domain: 0...100)
+            .chartXScale(domain: days.map { weekdayLabel($0.day) })
+        }
+    }
+}
+
+private struct BreaksChart: View {
+    let days: [DaySummary]
+
+    private struct Entry: Identifiable {
+        let id = UUID()
+        let day: String
+        let kind: String
+        let count: Int
+    }
+
+    private var entries: [Entry] {
+        days.flatMap { day -> [Entry] in
+            let label = weekdayLabel(day.day)
+            return [
+                Entry(day: label, kind: "Rested", count: day.rests),
+                Entry(day: label, kind: "Skipped", count: day.skipped),
+                Entry(day: label, kind: "Missed", count: day.missed),
+            ]
+        }
+    }
+
+    var body: some View {
+        ChartCard(title: "Breaks", subtitle: "Rested includes stepping away on your own") {
+            Chart(entries) { entry in
                 BarMark(
-                    x: .value("Day", summary.date.shortDayName),
-                    y: .value("Minutes", summary.totalScreenTimeSeconds / 60)
+                    x: .value("Day", entry.day),
+                    y: .value("Breaks", entry.count)
                 )
-                .foregroundStyle(
-                    .linearGradient(
-                        colors: [Color.monoPrimary, Color.monoSecondary],
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
+                .foregroundStyle(by: .value("Type", entry.kind))
+            }
+            .chartForegroundStyleScale([
+                "Rested": Color.monoPrimary,
+                "Skipped": Color.monoSecondary,
+                "Missed": Color.monoBorder,
+            ])
+            .chartLegend(position: .bottom, alignment: .leading)
+            .chartXScale(domain: days.map { weekdayLabel($0.day) })
+        }
+    }
+}
+
+private struct ScreenTimeChart: View {
+    let days: [DaySummary]
+
+    private var subtitle: String {
+        #if os(macOS)
+        "Time you were actively using this Mac"
+        #else
+        "Time inside screen sessions"
+        #endif
+    }
+
+    var body: some View {
+        ChartCard(title: "Screen time", subtitle: subtitle) {
+            Chart(days, id: \.day) { day in
+                BarMark(
+                    x: .value("Day", weekdayLabel(day.day)),
+                    y: .value("Minutes", Int(day.screenSeconds / 60))
                 )
+                .foregroundStyle(Color.monoSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
             }
             .chartYAxisLabel("Minutes")
-            .frame(height: 200)
+            .chartXScale(domain: days.map { weekdayLabel($0.day) })
         }
-        .padding()
-        .monochromeCard()
-    }
-}
-
-// MARK: - Breaks Chart
-
-private struct BreaksChart: View {
-    let dailySummaries: [DailySummary]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Breaks")
-                .font(.headline.weight(.heavy))
-                .foregroundStyle(Color.monoPrimary)
-
-            Chart(dailySummaries) { summary in
-                BarMark(
-                    x: .value("Day", summary.date.shortDayName),
-                    y: .value("Count", summary.breaksTaken)
-                )
-                .foregroundStyle(Color.monoPrimary)
-                .position(by: .value("Type", "Taken"))
-
-                BarMark(
-                    x: .value("Day", summary.date.shortDayName),
-                    y: .value("Count", summary.breaksSkipped)
-                )
-                .foregroundStyle(Color.monoSecondary.opacity(0.6))
-                .position(by: .value("Type", "Skipped"))
-            }
-            .chartForegroundStyleScale([
-                "Taken": Color.monoPrimary,
-                "Skipped": Color.monoSecondary.opacity(0.6)
-            ])
-            .frame(height: 200)
-        }
-        .padding()
-        .monochromeCard()
     }
 }
